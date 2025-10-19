@@ -55,6 +55,21 @@ export default function RSVPReaderPage() {
   const orpLetter = currentWord[orpIndex] || ""
   const afterORP = currentWord.slice(orpIndex + 1)
 
+  const getDynamicFontSize = (wordLength: number) => {
+    // Base sizes for different breakpoints
+    if (wordLength <= 8) {
+      return "text-3xl md:text-5xl lg:text-6xl" // Normal size
+    } else if (wordLength <= 12) {
+      return "text-2xl md:text-4xl lg:text-5xl" // Slightly smaller
+    } else if (wordLength <= 16) {
+      return "text-xl md:text-3xl lg:text-4xl" // Smaller
+    } else {
+      return "text-lg md:text-2xl lg:text-3xl" // Very small for very long words
+    }
+  }
+
+  const fontSizeClass = getDynamicFontSize(currentWord.length)
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -64,7 +79,7 @@ export default function RSVPReaderPage() {
             <Link href="/library">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="w-4 h-4" />
-                Kütüphane
+                <span className="hidden sm:inline">Kütüphane</span>
               </Button>
             </Link>
             <div className="text-sm text-muted-foreground">RSVP Okuyucu</div>
@@ -76,59 +91,72 @@ export default function RSVPReaderPage() {
       </header>
 
       {/* Main Reading Area */}
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl">
-          {/* Word Display */}
-          <Card className="p-16 mb-8 min-h-[300px] flex items-center justify-center bg-card/50">
-            <div className="text-center">
-              <div className="text-6xl font-bold tracking-tight mb-4 font-mono flex items-center justify-center">
-                <span className="text-foreground text-right" style={{ minWidth: "200px" }}>
+      <main className="flex-1 flex items-center justify-center p-2 sm:p-4">
+        <div className="w-full max-w-4xl">
+          <Card className="p-8 md:p-16 mb-8 min-h-[250px] md:min-h-[300px] flex items-center justify-center bg-card/50">
+            <div className="text-center w-full overflow-hidden">
+              <div className="font-mono flex items-center justify-center gap-0">
+                <span className={`${fontSizeClass} font-bold text-foreground text-right`} style={{ minWidth: "0" }}>
                   {beforeORP}
                 </span>
-                <span className="text-red-500 font-extrabold">{orpLetter}</span>
-                <span className="text-foreground text-left" style={{ minWidth: "200px" }}>
+                <span className={`${fontSizeClass} text-red-500 font-extrabold`}>{orpLetter}</span>
+                <span className={`${fontSizeClass} font-bold text-foreground text-left`} style={{ minWidth: "0" }}>
                   {afterORP}
                 </span>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground mt-4">
                 {currentIndex + 1} / {words.length} kelime
               </div>
             </div>
           </Card>
 
           {/* Progress Bar */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
             </div>
           </div>
 
           {/* Controls */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Playback Controls */}
-            <div className="flex items-center justify-center gap-4">
-              <Button variant="outline" size="icon" onClick={() => setCurrentIndex(Math.max(0, currentIndex - 10))}>
-                <SkipBack className="w-5 h-5" />
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 sm:h-12 sm:w-12 bg-transparent"
+                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 10))}
+              >
+                <SkipBack className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
 
-              <Button size="lg" className="w-16 h-16 rounded-full" onClick={() => setIsPlaying(!isPlaying)}>
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+              <Button
+                size="lg"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full"
+                onClick={() => setIsPlaying(!isPlaying)}
+              >
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 sm:w-6 sm:h-6" />
+                ) : (
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-1" />
+                )}
               </Button>
 
               <Button
                 variant="outline"
                 size="icon"
+                className="h-10 w-10 sm:h-12 sm:w-12 bg-transparent"
                 onClick={() => setCurrentIndex(Math.min(words.length - 1, currentIndex + 10))}
               >
-                <SkipForward className="w-5 h-5" />
+                <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </div>
 
             {/* Speed Control */}
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium">Okuma Hızı</span>
-                <span className="text-2xl font-bold text-primary">{wpm} WPM</span>
+                <span className="text-xs sm:text-sm font-medium">Okuma Hızı</span>
+                <span className="text-xl sm:text-2xl font-bold text-primary">{wpm} WPM</span>
               </div>
               <Slider
                 value={[wpm]}
