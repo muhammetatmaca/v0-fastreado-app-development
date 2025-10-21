@@ -4,73 +4,56 @@ export interface User {
   id: string
   email: string
   name: string
-  plan: "free" | "premium"
-  pdfCount: number
-  maxPdfs: number
+  plan?: "free" | "premium"
+  pdfCount?: number
+  maxPdfs?: number
 }
 
-const ADMIN_EMAIL = "admin@gmail.com"
-const ADMIN_PASSWORD = "123456"
-
-const MOCK_USERS: Record<string, { password: string; user: User }> = {
-  [ADMIN_EMAIL]: {
-    password: ADMIN_PASSWORD,
-    user: {
-      id: "admin-1",
-      email: ADMIN_EMAIL,
-      name: "Admin",
-      plan: "premium",
-      pdfCount: 0,
-      maxPdfs: Number.POSITIVE_INFINITY,
-    },
-  },
+const API = {
+  login: '/api/auth/login',
+  signup: '/api/auth/signup',
+  logout: '/api/auth/logout'
 }
 
 export const authService = {
-  login: (email: string, password: string): User | null => {
-    const userRecord = MOCK_USERS[email]
-    if (userRecord && userRecord.password === password) {
-      localStorage.setItem("user", JSON.stringify(userRecord.user))
-      return userRecord.user
+  login: async (email: string, password: string): Promise<User | null> => {
+    const res = await fetch(API.login, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user))
+      return data.user
     }
     return null
   },
 
-  signup: (email: string, password: string, name: string): User | null => {
-    if (MOCK_USERS[email]) {
-      return null // User already exists
+  signup: async (email: string, password: string, name: string): Promise<User | null> => {
+    const res = await fetch(API.signup, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, name }) })
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user))
+      return data.user
     }
-
-    const newUser: User = {
-      id: Date.now().toString(),
-      email,
-      name,
-      plan: "free",
-      pdfCount: 0,
-      maxPdfs: 2,
-    }
-
-    MOCK_USERS[email] = { password, user: newUser }
-    localStorage.setItem("user", JSON.stringify(newUser))
-    return newUser
+    return null
   },
 
-  logout: () => {
-    localStorage.removeItem("user")
+  logout: async () => {
+    await fetch(API.logout, { method: 'POST' })
+    localStorage.removeItem('user')
   },
 
   getCurrentUser: (): User | null => {
-    if (typeof window === "undefined") return null
-    const userStr = localStorage.getItem("user")
+    if (typeof window === 'undefined') return null
+    const userStr = localStorage.getItem('user')
     return userStr ? JSON.parse(userStr) : null
   },
 
-  updateUser: (updates: Partial<User>) => {
+  updateUser: (_updates: Partial<User>) => {
     const currentUser = authService.getCurrentUser()
     if (!currentUser) return null
-
-    const updatedUser = { ...currentUser, ...updates }
-    localStorage.setItem("user", JSON.stringify(updatedUser))
+    const updatedUser = { ...currentUser, ..._updates }
+    localStorage.setItem('user', JSON.stringify(updatedUser))
     return updatedUser
-  },
+  }
 }

@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const loggedInUser = authService.login(email, password)
+    const loggedInUser = await authService.login(email, password)
     if (loggedInUser) {
       setUser(loggedInUser)
       return true
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
-    const newUser = authService.signup(email, password, name)
+    const newUser = await authService.signup(email, password, name)
     if (newUser) {
       setUser(newUser)
       return true

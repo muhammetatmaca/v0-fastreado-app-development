@@ -28,3 +28,23 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Local development - MongoDB auth
+
+This project contains a minimal API route for login using MongoDB Atlas and JWT.
+
+1. Create a MongoDB Atlas cluster and obtain the connection string.
+2. Copy `.env.example` to `.env` and set `MONGODB_URI` and `JWT_SECRET`.
+3. Install the runtime dependencies:
+
+```bash
+pnpm add mongodb bcryptjs jsonwebtoken
+```
+
+4. Start the dev server:
+
+```bash
+pnpm dev
+```
+
+The login endpoint is available at `POST /api/auth/login` and expects `{ email, password }`.

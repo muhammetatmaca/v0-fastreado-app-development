@@ -1,0 +1,111 @@
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* CSS variables for mouse parallax */
+  --mx: 0;
+  --my: 0;
+}
+
+.gradient {
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(120deg, rgba(99,102,241,0.28), rgba(236,72,153,0.18) 35%, rgba(16,185,129,0.12) 70%);
+  filter: blur(120px);
+  transform: translateZ(0) rotate(calc(var(--mx) * 6deg));
+  animation: gradientShift 18s linear infinite;
+  opacity: 0.95;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.9;
+  transform: translate3d(0,0,0);
+  will-change: transform, left, top;
+  mix-blend-mode: screen;
+  transition: transform 0.35s cubic-bezier(.2,.9,.2,1);
+}
+
+.blob1 {
+  width: 480px;
+  height: 480px;
+  left: -6%;
+  top: 4%;
+  background: radial-gradient(circle at 30% 30%, rgba(124,58,237,0.92), rgba(124,58,237,0.45) 40%, transparent 60%);
+  animation: float1 20s ease-in-out infinite;
+  transform: translate3d(calc(var(--mx) * 40px), calc(var(--my) * 40px), 0) scale(1);
+}
+
+.blob2 {
+  width: 560px;
+  height: 560px;
+  right: -14%;
+  top: 18%;
+  background: radial-gradient(circle at 70% 30%, rgba(236,72,153,0.88), rgba(249,115,22,0.34) 45%, transparent 65%);
+  animation: float2 26s ease-in-out infinite;
+  transform: translate3d(calc(var(--mx) * -48px), calc(var(--my) * 36px), 0) scale(1);
+}
+
+.blob3 {
+  width: 380px;
+  height: 380px;
+  left: 22%;
+  bottom: -8%;
+  background: radial-gradient(circle at 40% 60%, rgba(16,185,129,0.92), rgba(14,165,233,0.32) 45%, transparent 70%);
+  animation: float3 22s ease-in-out infinite;
+  transform: translate3d(calc(var(--mx) * 28px), calc(var(--my) * 22px), 0) scale(1);
+}
+
+.sparks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0.6;
+  transform: translateZ(0) scale(1.02);
+  animation: sparksFloat 24s linear infinite;
+}
+
+@keyframes sparksFloat {
+  0% { transform: translate3d(0,0,0) scale(1.02); opacity: 0.55 }
+  50% { transform: translate3d(4px,-6px,0) scale(1.03); opacity: 0.75 }
+  100% { transform: translate3d(0,0,0) scale(1.02); opacity: 0.55 }
+}
+
+@keyframes gradientShift {
+  0% { transform: translate3d(0,0,0) rotate(0deg); }
+  25% { transform: translate3d(2%, -2%, 0) rotate(6deg); }
+  50% { transform: translate3d(4%, -4%, 0) rotate(10deg); }
+  75% { transform: translate3d(2%, -2%, 0) rotate(6deg); }
+  100% { transform: translate3d(0,0,0) rotate(0deg); }
+}
+
+@keyframes float1 {
+  0% { transform: translateY(0) translateX(0) scale(1); }
+  50% { transform: translateY(-28px) translateX(20px) scale(1.03); }
+  100% { transform: translateY(0) translateX(0) scale(1); }
+}
+
+@keyframes float2 {
+  0% { transform: translateY(0) translateX(0) scale(1); }
+  50% { transform: translateY(-46px) translateX(-32px) scale(1.04); }
+  100% { transform: translateY(0) translateX(0) scale(1); }
+}
+
+@keyframes float3 {
+  0% { transform: translateY(0) translateX(0) scale(1); }
+  50% { transform: translateY(-22px) translateX(16px) scale(1.02); }
+  100% { transform: translateY(0) translateX(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient,
+  .blob { animation: none !important; }
+}

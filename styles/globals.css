@@ -122,4 +122,24 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* When the animated background is enabled, make the body and any element
+     explicitly using the `bg-background` utility transparent so the animated
+     layer shows through. This is intentionally narrow to avoid changing other
+     utility classes. */
+  .has-animated-bg {
+    background-color: transparent !important;
+  }
+
+  .has-animated-bg .bg-background {
+    background-color: transparent !important;
+  }
+
+  /* Target common top-level page wrappers (many pages use `min-h-screen bg-background`) so
+     they don't occlude the animated layer. Keep this narrow to avoid changing inner UI card backgrounds. */
+  .has-animated-bg > .min-h-screen,
+  .has-animated-bg .min-h-screen:first-child {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
 }
