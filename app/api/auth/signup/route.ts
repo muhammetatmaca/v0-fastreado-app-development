@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import clientPromise from '@/lib/mongodb'
 import bcrypt from 'bcryptjs'
+import { sendVerificationEmail } from '@/lib/mailer'
+import { randomInt } from 'crypto'
 
 export async function POST(req: Request) {
   try {
@@ -14,10 +16,21 @@ export async function POST(req: Request) {
     if (existing) return NextResponse.json({ error: 'User exists' }, { status: 409 })
 
     const passwordHash = await bcrypt.hash(password, 10)
-    const result = await users.insertOne({ email, name, passwordHash })
+    // create verification code
+    const code = String(randomInt(100000, 999999))
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60) // 1 hour
+
+    const result = await users.insertOne({ email, name, passwordHash, verification: { verified: false, code, expiresAt } })
     const userId = result.insertedId.toString()
 
-    return NextResponse.json({ user: { id: userId, email, name } })
+    // try to send verification email (best-effort)
+    try {
+      await sendVerificationEmail(email, code)
+    } catch (err) {
+      console.warn('Failed to send verification email', err)
+    }
+
+    return NextResponse.json({ user: { id: userId, email, name }, verificationRequired: true }, { status: 201 })
   } catch (err) {
     console.error(err)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

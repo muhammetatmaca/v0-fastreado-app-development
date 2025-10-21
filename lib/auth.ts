@@ -12,14 +12,22 @@ export interface User {
 const API = {
   login: '/api/auth/login',
   signup: '/api/auth/signup',
+  verify: '/api/auth/verify',
+  resend: '/api/auth/resend',
   logout: '/api/auth/logout'
 }
 
 export const authService = {
   login: async (email: string, password: string): Promise<User | null> => {
     const res = await fetch(API.login, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
-    if (!res.ok) return null
     const data = await res.json()
+    if (!res.ok) {
+      // surface verification required state
+      if (data && data.verificationRequired) {
+        throw new Error('verification_required')
+      }
+      return null
+    }
     if (data.user) {
       localStorage.setItem('user', JSON.stringify(data.user))
       return data.user
@@ -29,13 +37,23 @@ export const authService = {
 
   signup: async (email: string, password: string, name: string): Promise<User | null> => {
     const res = await fetch(API.signup, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, name }) })
-    if (!res.ok) return null
     const data = await res.json()
+    if (!res.ok) return null
     if (data.user) {
-      localStorage.setItem('user', JSON.stringify(data.user))
+      // note: user must verify email before login
       return data.user
     }
     return null
+  },
+
+  verify: async (email: string, code: string) => {
+    const res = await fetch(API.verify, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code }) })
+    return res.ok
+  },
+
+  resend: async (email: string) => {
+    const res = await fetch(API.resend, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+    return res.ok
   },
 
   logout: async () => {

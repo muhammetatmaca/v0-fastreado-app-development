@@ -8,6 +8,8 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
   signup: (email: string, password: string, name: string) => Promise<boolean>
+  verify: (email: string, code: string) => Promise<boolean>
+  resend: (email: string) => Promise<boolean>
   logout: () => void
   updateUser: (updates: Partial<User>) => void
   isLoading: boolean
@@ -27,21 +29,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const loggedInUser = await authService.login(email, password)
-    if (loggedInUser) {
-      setUser(loggedInUser)
-      return true
+    try {
+      const loggedInUser = await authService.login(email, password)
+      if (loggedInUser) {
+        setUser(loggedInUser)
+        return true
+      }
+      return false
+    } catch (err: any) {
+      if (err?.message === 'verification_required') {
+        return false
+      }
+      return false
     }
-    return false
   }
 
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     const newUser = await authService.signup(email, password, name)
     if (newUser) {
-      setUser(newUser)
+      // user created but must verify via email
       return true
     }
     return false
+  }
+
+  const verify = async (email: string, code: string) => {
+    const ok = await authService.verify(email, code)
+    return ok
+  }
+
+  const resend = async (email: string) => {
+    const ok = await authService.resend(email)
+    return ok
   }
 
   const logout = () => {
@@ -58,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, verify, resend, logout, updateUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
