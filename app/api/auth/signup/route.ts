@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     if (!email || !password || !name) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
     const client = await clientPromise
-    const db = client.db()
+    const db = client.db('fastreado')
     const users = db.collection('users')
     const existing = await users.findOne({ email })
     if (existing) return NextResponse.json({ error: 'User exists' }, { status: 409 })

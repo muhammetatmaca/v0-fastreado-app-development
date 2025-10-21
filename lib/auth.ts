@@ -4,6 +4,7 @@ export interface User {
   id: string
   email: string
   name: string
+  avatar?: string
   plan?: "free" | "premium"
   pdfCount?: number
   maxPdfs?: number
@@ -14,7 +15,8 @@ const API = {
   signup: '/api/auth/signup',
   verify: '/api/auth/verify',
   resend: '/api/auth/resend',
-  logout: '/api/auth/logout'
+  logout: '/api/auth/logout',
+  google: '/api/auth/google'
 }
 
 export const authService = {
@@ -73,5 +75,9 @@ export const authService = {
     const updatedUser = { ...currentUser, ..._updates }
     localStorage.setItem('user', JSON.stringify(updatedUser))
     return updatedUser
+  },
+
+  googleLogin: () => {
+    window.location.href = API.google
   }
 }

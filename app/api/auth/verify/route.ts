@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     if (!email || !code) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
     const client = await clientPromise
-    const db = client.db()
+    const db = client.db('fastreado')
     const users = db.collection('users')
 
     const user = await users.findOne({ email })

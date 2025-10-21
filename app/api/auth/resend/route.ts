@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 })
 
     const client = await clientPromise
-    const db = client.db()
+    const db = client.db('fastreado')
     const users = db.collection('users')
 
     const user = await users.findOne({ email })

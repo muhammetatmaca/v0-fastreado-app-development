@@ -28,7 +28,7 @@ interface PDF {
 }
 
 export default function LibraryPage() {
-  const { user, logout, isLoading } = useAuth()
+  const { user, logout, isLoading, updateUser } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -36,6 +36,33 @@ export default function LibraryPage() {
       router.push("/login")
     }
   }, [user, isLoading, router])
+
+  // Handle user data from Google OAuth or refresh user data
+  useEffect(() => {
+    const handleUserData = async () => {
+      try {
+        const response = await fetch('/api/auth/me', { credentials: 'include' })
+        if (response.ok) {
+          const userData = await response.json()
+          if (userData.user) {
+            // Update user in context and localStorage
+            localStorage.setItem('user', JSON.stringify(userData.user))
+            updateUser(userData.user)
+          }
+        } else if (response.status === 401) {
+          // Token invalid, redirect to login
+          router.push('/login')
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error)
+      }
+    }
+
+    // Only fetch if we don't have user data or if we just landed from OAuth
+    if (!user && !isLoading) {
+      handleUserData()
+    }
+  }, [user, isLoading, updateUser, router])
 
   const [pdfs, setPdfs] = useState<PDF[]>([
     {

@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     if (!email || !password) return NextResponse.json({ error: 'Missing credentials' }, { status: 400 })
 
     const client = await clientPromise
-    const db = client.db()
+    const db = client.db('fastreado')
     const users = db.collection('users')
     const user = await users.findOne({ email })
     if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })

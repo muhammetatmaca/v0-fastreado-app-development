@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/google/callback'
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback-simple'
 
 export async function GET(req: Request) {
   try {
@@ -19,9 +19,6 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL('/login?error=google_not_configured', req.url))
     }
 
-    // Get the current host from the request to handle different ports
-    const redirectUri = GOOGLE_REDIRECT_URI || `${url.protocol}//${url.host}/api/auth/google/callback`
-
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -31,7 +28,7 @@ export async function GET(req: Request) {
         client_secret: GOOGLE_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: redirectUri,
+        redirect_uri: GOOGLE_REDIRECT_URI,
       }),
     })
 
@@ -50,9 +47,9 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL('/login?error=google_user_failed', req.url))
     }
 
-    // For now, create a simple user object without MongoDB (temporary fix)
+    // For now, create a simple user object without MongoDB
     const user = {
-      _id: googleUser.id,
+      id: googleUser.id,
       email: googleUser.email,
       name: googleUser.name || googleUser.email.split('@')[0],
       avatar: googleUser.picture,
@@ -61,12 +58,12 @@ export async function GET(req: Request) {
 
     // Create JWT token
     const token = jwt.sign(
-      { sub: user._id.toString(), email: user.email },
+      { sub: googleUser.id, email: googleUser.email },
       process.env.JWT_SECRET || 'dev-secret',
       { expiresIn: '7d' }
     )
 
-    // Redirect to library with token
+    // Redirect to library with token and user data
     const response = NextResponse.redirect(new URL('/library', req.url))
     response.cookies.set('token', token, {
       httpOnly: true,
@@ -76,13 +73,7 @@ export async function GET(req: Request) {
     })
 
     // Also set user data cookie for immediate access
-    response.cookies.set('user-data', JSON.stringify({
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
-      plan: user.plan || 'free'
-    }), {
+    response.cookies.set('user-data', JSON.stringify(user), {
       httpOnly: false,
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
