@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import AnimatedBackground from "@/components/animated-background"
+import { MobileNavbar } from "@/components/mobile-navbar"
 
 const inter = Inter({ subsets: ["latin"] })
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
@@ -35,7 +36,10 @@ export default function RootLayout({
         ` }} />
         <AnimatedBackground />
         <AuthProvider>
-          <div style={{ position: "relative", zIndex: 50 }}>{children}</div>
+          <div style={{ position: "relative", zIndex: 50 }}>
+            {children}
+            <MobileNavbar />
+          </div>
         </AuthProvider>
       </body>
     </html>

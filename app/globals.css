@@ -180,3 +180,10 @@
 .dark .logo-img {
   filter: brightness(1.2) contrast(1.2) invert(1);
 }
+
+/* Mobile navbar spacing */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 80px;
+  }
+}
