@@ -79,90 +79,107 @@ export default function VerifyPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="w-full max-w-md text-center">
-                    <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold mb-2">E-posta Doğrulandı!</h1>
-                    <p className="text-muted-foreground mb-4">
-                        Hesabınız başarıyla doğrulandı. Giriş sayfasına yönlendiriliyorsunuz...
-                    </p>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                        <img src="/fastreado-logo.png" alt="Fastreado" className="h-14 w-auto logo-img" />
-                    </Link>
-                    <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold mb-2">E-postanızı Doğrulayın</h1>
-                    <p className="text-muted-foreground">
-                        E-posta adresinize gönderilen 6 haneli doğrulama kodunu girin
-                    </p>
-                </div>
-
-                <div className="bg-card border border-border rounded-lg p-6">
-                    <form className="space-y-4" onSubmit={handleSubmit}>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">E-posta</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="ornek@email.com"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="code">Doğrulama Kodu</Label>
-                            <Input
-                                id="code"
-                                type="text"
-                                placeholder="123456"
-                                required
-                                maxLength={6}
-                                value={code}
-                                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                            />
-                        </div>
-
-                        {error && (
-                            <p className={`text-sm ${error.includes('gönderildi') ? 'text-green-600' : 'text-red-500'}`}>
-                                {error}
-                            </p>
-                        )}
-
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? "Doğrulanıyor..." : "Doğrula"}
-                        </Button>
-                    </form>
-
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-muted-foreground mb-2">
-                            Doğrulama kodu almadınız mı?
-                        </p>
-                        <Button
-                            variant="outline"
-                            onClick={handleResend}
-                            disabled={isResending || !email}
-                            className="w-full"
-                        >
-                            {isResending ? "Gönderiliyor..." : "Kodu Tekrar Gönder"}
-                        </Button>
-                    </div>
-
-                    <div className="mt-6 text-center text-sm">
-                        <Link href="/login" className="text-primary hover:underline">
-                            Giriş sayfasına dön
+            <div className="min-h-screen bg-background">
+                {/* Header */}
+                <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+                    <div className="container mx-auto px-4 py-4 flex justify-center">
+                        <Link href="/" className="inline-flex items-center gap-2">
+                            <img src="/fastreado-logo.png" alt="Fastreado" className="h-16 w-auto logo-img" />
                         </Link>
                     </div>
+                </header>
+
+                <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+                    <div className="w-full max-w-md text-center">
+                        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                        <h1 className="text-2xl font-bold mb-2">E-posta Doğrulandı!</h1>
+                        <p className="text-muted-foreground mb-4">
+                            Hesabınız başarıyla doğrulandı. Giriş sayfasına yönlendiriliyorsunuz...
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </div>
-    )
+                )
+    }
+
+                return (
+                <div className="min-h-screen bg-background">
+                    {/* Header */}
+                    <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+                        <div className="container mx-auto px-4 py-4 flex justify-center">
+                            <Link href="/" className="inline-flex items-center gap-2">
+                                <img src="/fastreado-logo.png" alt="Fastreado" className="h-16 w-auto logo-img" />
+                            </Link>
+                        </div>
+                    </header>
+
+                    <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+                        <div className="w-full max-w-md">
+                            <div className="text-center mb-8">
+                                <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
+                                <h1 className="text-2xl font-bold mb-2">E-postanızı Doğrulayın</h1>
+                                <p className="text-muted-foreground">
+                                    E-posta adresinize gönderilen 6 haneli doğrulama kodunu girin
+                                </p>
+                            </div>
+
+                            <div className="bg-card border border-border rounded-lg p-6">
+                                <form className="space-y-4" onSubmit={handleSubmit}>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email">E-posta</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="ornek@email.com"
+                                            required
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="code">Doğrulama Kodu</Label>
+                                        <Input
+                                            id="code"
+                                            type="text"
+                                            placeholder="123456"
+                                            required
+                                            maxLength={6}
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                                        />
+                                    </div>
+
+                                    {error && (
+                                        <p className={`text-sm ${error.includes('gönderildi') ? 'text-green-600' : 'text-red-500'}`}>
+                                            {error}
+                                        </p>
+                                    )}
+
+                                    <Button type="submit" className="w-full" disabled={isLoading}>
+                                        {isLoading ? "Doğrulanıyor..." : "Doğrula"}
+                                    </Button>
+                                </form>
+
+                                <div className="mt-6 text-center">
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                        Doğrulama kodu almadınız mı?
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleResend}
+                                        disabled={isResending || !email}
+                                        className="w-full"
+                                    >
+                                        {isResending ? "Gönderiliyor..." : "Kodu Tekrar Gönder"}
+                                    </Button>
+                                </div>
+
+                                <div className="mt-6 text-center text-sm">
+                                    <Link href="/login" className="text-primary hover:underline">
+                                        Giriş sayfasına dön
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    )
 }

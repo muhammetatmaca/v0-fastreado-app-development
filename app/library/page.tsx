@@ -193,7 +193,7 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
@@ -241,13 +241,36 @@ export default function LibraryPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Kütüphanem</h1>
-          <p className="text-muted-foreground mb-6">PDF'lerinizi yükleyin ve hızlı okuma deneyimine başlayın</p>
+      {/* Mobile Stats Bar */}
+      <div className="md:hidden bg-card/50 border-b border-border">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between text-sm">
+            <div className="text-muted-foreground">
+              {pdfs.length} / {user.plan === "premium" ? "∞" : maxPdfs} PDF
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                {user.plan === "premium" ? "Premium" : "Ücretsiz"}
+              </div>
+              {user.plan === "free" && (
+                <Link href="/pricing">
+                  <Button variant="outline" size="sm" className="text-xs h-6 px-2">
+                    Yükselt
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="container mx-auto px-4 py-6 md:py-8">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Kütüphanem</h1>
+          <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">PDF'lerinizi yükleyin ve hızlı okuma deneyimine başlayın</p>
 
           <label htmlFor="pdf-upload">
-            <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer p-8 text-center">
+            <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer p-4 md:p-8 text-center">
               <input
                 id="pdf-upload"
                 type="file"
@@ -256,9 +279,9 @@ export default function LibraryPage() {
                 onChange={handleFileUpload}
                 disabled={isUploading || !canUpload}
               />
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">{isUploading ? "Yükleniyor..." : "PDF Yükle"}</h3>
-              <p className="text-sm text-muted-foreground">
+              <Upload className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-3 md:mb-4 text-muted-foreground" />
+              <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">{isUploading ? "Yükleniyor..." : "PDF Yükle"}</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 {!canUpload
                   ? `Ücretsiz planda maksimum ${maxPdfs} PDF yükleyebilirsiniz`
                   : "Tıklayın veya sürükleyip bırakın"}
@@ -268,7 +291,7 @@ export default function LibraryPage() {
         </div>
 
         {pdfs.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {pdfs.map((pdf) => (
               <Card key={pdf.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
                 <div className="relative aspect-[2/3] bg-muted overflow-hidden">
@@ -284,17 +307,18 @@ export default function LibraryPage() {
                   )}
                 </div>
 
-                <div className="p-4">
-                  <h3 className="font-semibold mb-1 truncate">{pdf.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="p-3 md:p-4">
+                  <h3 className="font-semibold mb-1 truncate text-sm md:text-base">{pdf.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                     {pdf.pageCount} sayfa • {pdf.progress > 0 ? `%${pdf.progress} tamamlandı` : "Başlanmadı"}
                   </p>
 
-                  <div className="mb-3">
+                  <div className="mb-2 md:mb-3">
                     <AIFeaturesDialog pdfId={pdf.id} pdfTitle={pdf.title} />
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Desktop Buttons */}
+                  <div className="hidden md:flex gap-2">
                     <Link href={`/read/rsvp/${pdf.id}`} className="flex-1">
                       <Button size="sm" className="w-full gap-2">
                         <Play className="w-4 h-4" />
@@ -307,19 +331,40 @@ export default function LibraryPage() {
                         Bionic
                       </Button>
                     </Link>
-                    <Button size="sm" variant="ghost" onClick={() => handleDelete(pdf.id)} className="px-3">
+                    <Button size="sm" variant="outline" onClick={() => handleDelete(pdf.id)} className="px-3 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
                       <Trash2 className="w-4 h-4" />
                     </Button>
+                  </div>
+
+                  {/* Mobile Buttons */}
+                  <div className="md:hidden space-y-2">
+                    <div className="flex gap-2">
+                      <Link href={`/read/rsvp/${pdf.id}`} className="flex-1">
+                        <Button size="sm" className="w-full gap-1 text-xs">
+                          <Play className="w-3 h-3" />
+                          RSVP Okuma
+                        </Button>
+                      </Link>
+                      <Button size="sm" variant="outline" onClick={() => handleDelete(pdf.id)} className="px-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <Link href={`/read/bionic/${pdf.id}`} className="block">
+                      <Button size="sm" variant="outline" className="w-full gap-1 bg-transparent text-xs">
+                        <BookOpen className="w-3 h-3" />
+                        Bionic Okuma
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </Card>
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Henüz PDF yok</h3>
-            <p className="text-muted-foreground">İlk PDF'nizi yükleyerek başlayın</p>
+          <div className="text-center py-12 md:py-16">
+            <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 text-muted-foreground" />
+            <h3 className="text-lg md:text-xl font-semibold mb-2">Henüz PDF yok</h3>
+            <p className="text-sm md:text-base text-muted-foreground">İlk PDF'nizi yükleyerek başlayın</p>
           </div>
         )}
       </main>
