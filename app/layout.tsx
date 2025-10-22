@@ -6,6 +6,7 @@ import AnimatedBackground from "@/components/animated-background"
 
 const inter = Inter({ subsets: ["latin"] })
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
+// Fragor font is loaded via CSS @font-face
 
 export const metadata = {
   title: "Fastreado - Speed Reading App",

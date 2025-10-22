@@ -8,7 +8,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Zap } from "lucide-react"
+// Logo is now an image
 import { useAuth } from "@/contexts/auth-context"
 
 export default function LoginPage() {
@@ -77,8 +77,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <Zap className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Fastreado</span>
+            <img src="/fastreado-logo.png" alt="Fastreado" className="h-14 w-auto logo-img" />
           </Link>
           <h1 className="text-2xl font-bold mb-2">Tekrar hoş geldiniz</h1>
           <p className="text-muted-foreground">Hesabınıza giriş yapın</p>

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Zap, Sparkles } from "lucide-react"
+import { BookOpen, Sparkles, Zap } from "lucide-react"
 
 export default function HomePage() {
   return (
@@ -9,8 +9,7 @@ export default function HomePage() {
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Fastreado</span>
+            <img src="/fastreado-logo.png" alt="Fastreado" className="h-10 w-auto logo-img" />
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -41,7 +40,7 @@ export default function HomePage() {
             <Sparkles className="h-4 w-4" />
             <span>Yapay zeka destekli hızlı okuma</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-balance leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-balance leading-tight font-fragor">
             Okuma hızınızı <span className="text-primary">3 katına</span> çıkarın
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 text-pretty leading-relaxed max-w-2xl mx-auto">
@@ -64,7 +63,7 @@ export default function HomePage() {
       <section id="features" className="container mx-auto px-4 py-20 border-t border-border">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Güçlü özellikler</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">Güçlü özellikler</h2>
             <p className="text-lg text-muted-foreground">Okuma deneyiminizi geliştiren modern araçlar</p>
           </div>
 
@@ -74,7 +73,7 @@ export default function HomePage() {
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Zap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">RSVP Okuma</h3>
+              <h3 className="text-xl font-semibold mb-2 font-fragor">RSVP Okuma</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Kelime kelime hızlı okuma modu. Orta harfi vurgulama ile odaklanmanızı artırın.
               </p>
@@ -85,7 +84,7 @@ export default function HomePage() {
               <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
                 <BookOpen className="h-6 w-6 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Biyonik Okuma</h3>
+              <h3 className="text-xl font-semibold mb-2 font-fragor">Biyonik Okuma</h3>
               <p className="text-muted-foreground leading-relaxed">
                 İlk ve son harfleri kalın göstererek doğal okuma hızınızı artırın.
               </p>
@@ -96,7 +95,7 @@ export default function HomePage() {
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">AI Özet & Podcast</h3>
+              <h3 className="text-xl font-semibold mb-2 font-fragor">AI Özet & Podcast</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Gemini AI ile otomatik özet oluşturun ve podcast'e dönüştürün.
               </p>
@@ -108,7 +107,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20 border-t border-border">
         <div className="max-w-4xl mx-auto text-center bg-card border border-border rounded-2xl p-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Hızlı okumaya bugün başlayın</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">Hızlı okumaya bugün başlayın</h2>
           <p className="text-lg text-muted-foreground mb-8">Ücretsiz hesap oluşturun ve ayda 2 PDF ile başlayın</p>
           <Button size="lg" asChild>
             <Link href="/signup">Ücretsiz Başla</Link>
@@ -120,13 +119,13 @@ export default function HomePage() {
       <section id="faq" className="container mx-auto px-4 py-20 border-t border-border">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Sıkça Sorulan Sorular</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">Sıkça Sorulan Sorular</h2>
             <p className="text-lg text-muted-foreground">Merak ettikleriniz</p>
           </div>
 
           <div className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2">RSVP okuma nedir?</h3>
+              <h3 className="text-lg font-semibold mb-2 font-fragor">RSVP okuma nedir?</h3>
               <p className="text-muted-foreground leading-relaxed">
                 RSVP (Rapid Serial Visual Presentation), kelimeleri tek tek ekranın ortasında göstererek okuma hızınızı
                 artıran bir tekniktir. Orta harfi vurgulayarak gözünüzün odaklanmasını kolaylaştırır.
@@ -134,7 +133,7 @@ export default function HomePage() {
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2">Biyonik okuma nasıl çalışır?</h3>
+              <h3 className="text-lg font-semibold mb-2 font-fragor">Biyonik okuma nasıl çalışır?</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Biyonik okuma, kelimelerin ilk ve son harflerini kalın göstererek beynin kelimeleri daha hızlı
                 tanımasını sağlar. Bu sayede doğal okuma hızınız artar.
@@ -142,7 +141,7 @@ export default function HomePage() {
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2">AI özellikleri neler sunar?</h3>
+              <h3 className="text-lg font-semibold mb-2 font-fragor">AI özellikleri neler sunar?</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Premium üyelikle PDF'lerinizden otomatik özet oluşturabilir ve podcast senaryosu üretebilirsiniz. Gemini
                 AI teknolojisi kullanılarak içeriğiniz analiz edilir.
@@ -150,14 +149,14 @@ export default function HomePage() {
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2">Ücretsiz plan ile kaç PDF yükleyebilirim?</h3>
+              <h3 className="text-lg font-semibold mb-2 font-fragor">Ücretsiz plan ile kaç PDF yükleyebilirim?</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Ücretsiz plan ile ayda 2 PDF yükleyebilirsiniz. Sınırsız PDF yüklemek için Premium plana geçebilirsiniz.
               </p>
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2">Hangi PDF formatları destekleniyor?</h3>
+              <h3 className="text-lg font-semibold mb-2 font-fragor">Hangi PDF formatları destekleniyor?</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Standart PDF formatları desteklenmektedir. Metin içeren tüm PDF'leri yükleyebilir ve okuyabilirsiniz.
               </p>
@@ -172,13 +171,12 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Zap className="h-5 w-5 text-primary" />
-                <span className="font-bold">Fastreado</span>
+                <img src="/fastreado-logo.png" alt="Fastreado" className="h-8 w-auto logo-img" />
               </div>
               <p className="text-sm text-muted-foreground">Hızlı okuma için modern platform</p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Ürün</h4>
+              <h4 className="font-semibold mb-4 font-fragor">Ürün</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="#features" className="hover:text-foreground transition-colors">
@@ -198,7 +196,7 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Şirket</h4>
+              <h4 className="font-semibold mb-4 font-fragor">Şirket</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/about" className="hover:text-foreground transition-colors">
@@ -218,7 +216,7 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Yasal</h4>
+              <h4 className="font-semibold mb-4 font-fragor">Yasal</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/privacy" className="hover:text-foreground transition-colors">

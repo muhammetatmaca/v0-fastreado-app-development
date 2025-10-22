@@ -1,26 +1,36 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Play, Pause, SkipBack, SkipForward, Settings, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-
-// Mock text data
-const SAMPLE_TEXT = `Hızlı okuma, modern dünyanın en değerli becerilerinden biridir. Bilgi çağında yaşarken, daha fazla içeriği daha kısa sürede tüketebilmek büyük bir avantaj sağlar. RSVP yöntemi, kelimeleri tek tek göstererek gözlerinizin sayfada gezinme ihtiyacını ortadan kaldırır. Bu sayede okuma hızınız önemli ölçüde artar. Araştırmalar, bu yöntemle ortalama okuma hızının iki katına çıkabileceğini gösteriyor. Pratik yaptıkça daha da hızlanacaksınız.`
+import { getBookContent, getBookInfo } from "@/lib/mock-books"
 
 export default function RSVPReaderPage() {
+  const params = useParams()
+  const bookId = params.id as string
   const [words, setWords] = useState<string[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [wpm, setWpm] = useState(300)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [bookInfo, setBookInfo] = useState<any>(null)
 
   useEffect(() => {
-    // Split text into words
-    const wordArray = SAMPLE_TEXT.split(/\s+/)
-    setWords(wordArray)
-  }, [])
+    // Get book info and content
+    const info = getBookInfo(bookId)
+    setBookInfo(info)
+    
+    if (info) {
+      const content = getBookContent(bookId, currentPage)
+      const wordArray = content.split(/\s+/)
+      setWords(wordArray)
+      setCurrentIndex(0)
+    }
+  }, [bookId, currentPage])
 
   useEffect(() => {
     if (!isPlaying || currentIndex >= words.length) return
@@ -82,7 +92,9 @@ export default function RSVPReaderPage() {
                 <span className="hidden sm:inline">Kütüphane</span>
               </Button>
             </Link>
-            <div className="text-sm text-muted-foreground">RSVP Okuyucu</div>
+            <div className="text-sm text-muted-foreground">
+              {bookInfo ? `${bookInfo.title} - ${bookInfo.author}` : 'RSVP Okuyucu'}
+            </div>
             <Button variant="ghost" size="sm">
               <Settings className="w-4 h-4" />
             </Button>
@@ -105,7 +117,7 @@ export default function RSVPReaderPage() {
                 </span>
               </div>
               <div className="text-sm text-muted-foreground mt-4">
-                {currentIndex + 1} / {words.length} kelime
+                {currentIndex + 1} / {words.length} kelime • Sayfa {currentPage + 1}
               </div>
             </div>
           </Card>
@@ -149,6 +161,34 @@ export default function RSVPReaderPage() {
                 onClick={() => setCurrentIndex(Math.min(words.length - 1, currentIndex + 10))}
               >
                 <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            </div>
+
+            {/* Page Navigation */}
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (currentPage > 0) {
+                    setCurrentPage(currentPage - 1)
+                    setIsPlaying(false)
+                  }
+                }}
+                disabled={currentPage === 0}
+              >
+                Önceki Sayfa
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (bookInfo && currentPage < bookInfo.content.length - 1) {
+                    setCurrentPage(currentPage + 1)
+                    setIsPlaying(false)
+                  }
+                }}
+                disabled={!bookInfo || currentPage >= bookInfo.content.length - 1}
+              >
+                Sonraki Sayfa
               </Button>
             </div>
 

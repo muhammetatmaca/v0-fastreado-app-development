@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Upload, BookOpen, Zap, FileText, Trash2, Play, LogOut, User } from "lucide-react"
+import { Upload, BookOpen, FileText, Trash2, Play, LogOut, User } from "lucide-react"
 import Link from "next/link"
 import { AIFeaturesDialog } from "@/components/ai-features-dialog"
 import { useAuth } from "@/contexts/auth-context"
@@ -67,19 +67,83 @@ export default function LibraryPage() {
   const [pdfs, setPdfs] = useState<PDF[]>([
     {
       id: "1",
-      title: "Atomic Habits",
-      coverUrl: "/atomic-habits-cover.png",
-      pageCount: 320,
+      title: "Nutuk - Mustafa Kemal Atatürk",
+      coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
+      pageCount: 542,
       uploadDate: "2024-01-15",
-      progress: 45,
+      progress: 0,
     },
     {
       id: "2",
-      title: "Deep Work",
-      coverUrl: "/deep-work-book-cover.jpg",
-      pageCount: 296,
-      uploadDate: "2024-01-10",
+      title: "Safahat - Mehmet Akif Ersoy",
+      coverUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop",
+      pageCount: 324,
+      uploadDate: "2024-01-14",
+      progress: 25,
+    },
+    {
+      id: "3",
+      title: "Kuyucaklı Yusuf - Sabahattin Ali",
+      coverUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
+      pageCount: 198,
+      uploadDate: "2024-01-13",
+      progress: 60,
+    },
+    {
+      id: "4",
+      title: "İçimizdeki Şeytan - Sabahattin Ali",
+      coverUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
+      pageCount: 156,
+      uploadDate: "2024-01-12",
       progress: 100,
+    },
+    {
+      id: "5",
+      title: "Sinekli Bakkal - Halide Edib Adıvar",
+      coverUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
+      pageCount: 287,
+      uploadDate: "2024-01-11",
+      progress: 0,
+    },
+    {
+      id: "6",
+      title: "Çalıkuşu - Reşat Nuri Güntekin",
+      coverUrl: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=600&fit=crop",
+      pageCount: 342,
+      uploadDate: "2024-01-10",
+      progress: 35,
+    },
+    {
+      id: "7",
+      title: "Aşk-ı Memnu - Halit Ziya Uşaklıgil",
+      coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
+      pageCount: 456,
+      uploadDate: "2024-01-09",
+      progress: 80,
+    },
+    {
+      id: "8",
+      title: "Tutunamayanlar - Oğuz Atay",
+      coverUrl: "https://images.unsplash.com/photo-1550399105-c4db5fb85c18?w=400&h=600&fit=crop",
+      pageCount: 724,
+      uploadDate: "2024-01-08",
+      progress: 15,
+    },
+    {
+      id: "9",
+      title: "Beyaz Kale - Orhan Pamuk",
+      coverUrl: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
+      pageCount: 198,
+      uploadDate: "2024-01-07",
+      progress: 90,
+    },
+    {
+      id: "10",
+      title: "Sevgili Arsız Ölüm - Nazim Hikmet",
+      coverUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop",
+      pageCount: 234,
+      uploadDate: "2024-01-06",
+      progress: 45,
     },
   ])
   const [isUploading, setIsUploading] = useState(false)
@@ -88,7 +152,7 @@ export default function LibraryPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Zap className="w-12 h-12 mx-auto mb-4 text-primary animate-pulse" />
+          <img src="/fastreado-logo.png" alt="Fastreado" className="h-14 w-auto mx-auto mb-4 animate-pulse logo-img" />
           <p className="text-muted-foreground">Yükleniyor...</p>
         </div>
       </div>
@@ -133,10 +197,7 @@ export default function LibraryPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">Fastreado</span>
+              <img src="/fastreado-logo.png" alt="Fastreado" className="h-10 w-auto logo-img" />
             </Link>
 
             <div className="flex items-center gap-4">

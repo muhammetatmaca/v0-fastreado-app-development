@@ -1,26 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { ChevronLeft, ChevronRight, Settings, ArrowLeft, Type } from "lucide-react"
 import Link from "next/link"
-
-// Mock text data
-const SAMPLE_PAGES = [
-  `Hızlı okuma, modern dünyanın en değerli becerilerinden biridir. Bilgi çağında yaşarken, daha fazla içeriği daha kısa sürede tüketebilmek büyük bir avantaj sağlar.
-
-Bionic okuma yöntemi, kelimelerin ilk ve son harflerini kalınlaştırarak gözlerinizin metni daha hızlı taramasını sağlar. Bu teknik, beynin kelime tanıma sürecini hızlandırır.
-
-Araştırmalar gösteriyor ki, insanlar kelimeleri harf harf değil, bütün olarak algılar. Kalınlaştırılmış harfler, bu algılamayı kolaylaştırır ve okuma hızını artırır.`,
-
-  `Pratik yaptıkça bu yöntemle okuma hızınız önemli ölçüde artacaktır. İlk başta alışık olmadığınız için yavaş gelebilir, ancak zamanla doğal hale gelir.
-
-Düzenli egzersiz, hızlı okuma becerinizi geliştirmenin anahtarıdır. Her gün en az 15-20 dakika pratik yapmanız önerilir.
-
-Unutmayın, hız kadar anlama da önemlidir. Hızlı okurken içeriği kavramaya da dikkat edin.`,
-]
+import { getBookContent, getBookInfo } from "@/lib/mock-books"
 
 function makeBionic(text: string): JSX.Element[] {
   return text.split("\n\n").map((paragraph, pIndex) => (
@@ -49,12 +36,25 @@ function makeBionic(text: string): JSX.Element[] {
   ))
 }
 
-export default function BionicReaderPage({ params }: { params: any }) {
-  const { id } = params
+export default function BionicReaderPage() {
+  const params = useParams()
+  const bookId = params.id as string
   const [currentPage, setCurrentPage] = useState(0)
   const [fontSize, setFontSize] = useState(18)
+  const [bookInfo, setBookInfo] = useState<any>(null)
+  const [pageContent, setPageContent] = useState("")
 
-  const totalPages = SAMPLE_PAGES.length
+  useEffect(() => {
+    const info = getBookInfo(bookId)
+    setBookInfo(info)
+    
+    if (info) {
+      const content = getBookContent(bookId, currentPage)
+      setPageContent(content)
+    }
+  }, [bookId, currentPage])
+
+  const totalPages = bookInfo?.content.length || 1
   const progress = ((currentPage + 1) / totalPages) * 100
 
   return (
@@ -69,7 +69,9 @@ export default function BionicReaderPage({ params }: { params: any }) {
                 Kütüphane
               </Button>
             </Link>
-            <div className="text-sm text-muted-foreground">Bionic Okuyucu</div>
+            <div className="text-sm text-muted-foreground">
+              {bookInfo ? `${bookInfo.title} - ${bookInfo.author}` : 'Bionic Okuyucu'}
+            </div>
             <Button variant="ghost" size="sm">
               <Settings className="w-4 h-4" />
             </Button>
@@ -83,7 +85,7 @@ export default function BionicReaderPage({ params }: { params: any }) {
           {/* Page Content */}
           <Card className="p-8 md:p-12 mb-6 min-h-[500px] bg-card/50">
             <div className="text-foreground" style={{ fontSize: `${fontSize}px` }}>
-              {makeBionic(SAMPLE_PAGES[currentPage])}
+              {pageContent && makeBionic(pageContent)}
             </div>
           </Card>
 

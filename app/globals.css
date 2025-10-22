@@ -1,6 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Fragor Font */
+@font-face {
+  font-family: 'Fragor';
+  src: url('/fonts/fragorfont/fragordemoversionregular-wyxq9.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -77,6 +86,7 @@
 @theme inline {
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Courier New", monospace;
+  --font-fragor: "Fragor", "Outfit", sans-serif;
 
   /* Dark theme inspired by design inspiration */
   --color-background: 10 10 12;
@@ -155,4 +165,18 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* Logo styles */
+.logo-img {
+  background: transparent !important;
+  mix-blend-mode: multiply;
+  filter: brightness(1.1) contrast(1.1);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Dark mode logo adjustments */
+.dark .logo-img {
+  filter: brightness(1.2) contrast(1.2) invert(1);
 }
