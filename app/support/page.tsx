@@ -1,131 +1,140 @@
+"use client"
+
 import Link from "next/link"
-import { ArrowLeft, Mail, MessageCircle, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { ArrowLeft, HelpCircle, Book, Zap, Sparkles } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
+import { LanguageFlags } from "@/components/language-flags"
 
 export default function SupportPage() {
+  const { t, language } = useTranslation()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold">Fastreado</span>
-          </Link>
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {language === 'tr' ? 'Ana Sayfa' : 'Home'}
+              </Link>
+            </Button>
+            <img src="/fastreado-logo.png" alt="Fastreado" className="h-8 w-auto logo-img" />
+          </div>
+          <LanguageFlags />
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-16 max-w-4xl">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Ana Sayfaya Dön
-        </Link>
+      {/* Content */}
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-4xl font-bold mb-8 font-fragor">
+          {language === 'tr' ? 'Destek' : 'Support'}
+        </h1>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Destek Merkezi</h1>
-          <p className="text-lg text-muted-foreground">Size nasıl yardımcı olabiliriz?</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
-          <Card className="p-6">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <Mail className="w-6 h-6 text-primary" />
+        {/* Help Categories */}
+        <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Book className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">E-posta Desteği</h3>
+            <h3 className="text-xl font-semibold mb-3 font-fragor">
+              {language === 'tr' ? 'Başlangıç Rehberi' : 'Getting Started'}
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Sorularınız için bize e-posta gönderin. 24 saat içinde yanıt veriyoruz.
+              {language === 'tr'
+                ? 'Fastreado\'yu kullanmaya başlamak için adım adım rehber.'
+                : 'Step-by-step guide to get started with Fastreado.'
+              }
             </p>
-            <Button variant="outline" asChild>
-              <a href="mailto:destek@fastreado.com">destek@fastreado.com</a>
-            </Button>
-          </Card>
+            <ul className="text-sm text-muted-foreground space-y-2">
+              <li>• {language === 'tr' ? 'Hesap oluşturma' : 'Account creation'}</li>
+              <li>• {language === 'tr' ? 'PDF yükleme' : 'PDF upload'}</li>
+              <li>• {language === 'tr' ? 'Okuma modları' : 'Reading modes'}</li>
+            </ul>
+          </div>
 
-          <Card className="p-6">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <MessageCircle className="w-6 h-6 text-primary" />
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Zap className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Canlı Destek</h3>
-            <p className="text-muted-foreground mb-4">Premium kullanıcılar için öncelikli canlı destek hizmeti.</p>
-            <Button variant="outline" disabled>
-              Yakında Gelecek
-            </Button>
-          </Card>
+            <h3 className="text-xl font-semibold mb-3 font-fragor">
+              {language === 'tr' ? 'RSVP Okuma' : 'RSVP Reading'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {language === 'tr'
+                ? 'Hızlı okuma teknolojisini nasıl kullanacağınızı öğrenin.'
+                : 'Learn how to use speed reading technology.'
+              }
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-2">
+              <li>• {language === 'tr' ? 'Hız ayarlama' : 'Speed adjustment'}</li>
+              <li>• {language === 'tr' ? 'Odaklanma teknikleri' : 'Focus techniques'}</li>
+              <li>• {language === 'tr' ? 'İlerleme takibi' : 'Progress tracking'}</li>
+            </ul>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Book className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 font-fragor">
+              {language === 'tr' ? 'Biyonik Okuma' : 'Bionic Reading'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {language === 'tr'
+                ? 'Doğal okuma hızınızı artıran teknolojiyi keşfedin.'
+                : 'Discover technology that increases your natural reading speed.'
+              }
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-2">
+              <li>• {language === 'tr' ? 'Vurgulama sistemi' : 'Highlighting system'}</li>
+              <li>• {language === 'tr' ? 'Göz hareketleri' : 'Eye movements'}</li>
+              <li>• {language === 'tr' ? 'Anlama oranı' : 'Comprehension rate'}</li>
+            </ul>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 font-fragor">
+              {language === 'tr' ? 'AI Özellikleri' : 'AI Features'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {language === 'tr'
+                ? 'Yapay zeka destekli özet ve podcast özelliklerini kullanın.'
+                : 'Use AI-powered summary and podcast features.'
+              }
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-2">
+              <li>• {language === 'tr' ? 'Otomatik özet' : 'Auto summary'}</li>
+              <li>• {language === 'tr' ? 'Podcast oluşturma' : 'Podcast creation'}</li>
+              <li>• {language === 'tr' ? 'Anahtar kelimeler' : 'Keywords'}</li>
+            </ul>
+          </div>
         </div>
 
-        <div className="space-y-8">
-          <h2 className="text-3xl font-bold">Sıkça Sorulan Sorular</h2>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-3">PDF yüklerken hata alıyorum, ne yapmalıyım?</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              PDF dosyanızın 50MB'dan küçük olduğundan ve şifre korumalı olmadığından emin olun. Sorun devam ederse,
-              dosyayı farklı bir PDF okuyucudan "Farklı Kaydet" ile yeniden kaydetmeyi deneyin.
-            </p>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-3">RSVP okuma hızını nasıl ayarlayabilirim?</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              RSVP okuma modunda, ekranın alt kısmındaki hız kontrolünü kullanarak kelime/dakika (WPM) değerini
-              ayarlayabilirsiniz. Başlangıç için 250-300 WPM önerilir.
-            </p>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-3">AI özellikleri nasıl çalışır?</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Premium kullanıcılar, PDF içeriğinden otomatik özet ve podcast senaryosu oluşturabilir. Google Gemini AI
-              kullanarak içeriğinizi analiz eder ve özetler. Bu işlem birkaç saniye sürer.
-            </p>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-3">Aboneliğimi nasıl iptal edebilirim?</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Hesap ayarlarınızdan "Abonelik Yönetimi" bölümüne giderek aboneliğinizi iptal edebilirsiniz. İptal sonrası
-              mevcut dönem sonuna kadar Premium özelliklerini kullanmaya devam edebilirsiniz.
-            </p>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-3">Verilerim güvende mi?</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Evet, tüm verileriniz şifrelenmiş olarak saklanır. PDF dosyalarınız güvenli bulut depolama sistemlerinde
-              tutulur ve sadece sizin erişiminize açıktır. Daha fazla bilgi için{" "}
-              <Link href="/privacy" className="text-primary hover:underline">
-                gizlilik politikamızı
-              </Link>{" "}
-              inceleyebilirsiniz.
-            </p>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-3">Mobil uygulama var mı?</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Şu anda web uygulaması olarak hizmet veriyoruz. Mobil tarayıcınızdan Fastreado'ya erişebilir ve tüm
-              özellikleri kullanabilirsiniz. iOS ve Android uygulamaları yakında gelecek.
-            </p>
-          </Card>
+        {/* Contact Support */}
+        <div className="bg-card border border-border rounded-lg p-8 text-center">
+          <HelpCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h3 className="text-xl font-semibold mb-3 font-fragor">
+            {language === 'tr' ? 'Hala Yardıma İhtiyacınız Var mı?' : 'Still Need Help?'}
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            {language === 'tr'
+              ? 'Sorularınız için bizimle iletişime geçin. Size yardımcı olmaktan mutluluk duyarız.'
+              : 'Contact us for your questions. We\'d be happy to help you.'
+            }
+          </p>
+          <Button asChild>
+            <Link href="/contact">
+              {language === 'tr' ? 'İletişime Geç' : 'Contact Us'}
+            </Link>
+          </Button>
         </div>
-
-        <div className="mt-16 text-center">
-          <Card className="p-8 bg-muted/50">
-            <h3 className="text-2xl font-bold mb-4">Sorunuz yanıtlanmadı mı?</h3>
-            <p className="text-muted-foreground mb-6">
-              Başka bir sorunuz varsa, bize e-posta gönderin. Size yardımcı olmaktan mutluluk duyarız.
-            </p>
-            <Button asChild>
-              <a href="mailto:destek@fastreado.com">Bize Ulaşın</a>
-            </Button>
-          </Card>
-        </div>
-      </main>
+      </div>
     </div>
   )
 }

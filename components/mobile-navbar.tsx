@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, BookOpen, User, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const navItems = [
   {
@@ -30,6 +31,30 @@ const navItems = [
 
 export function MobileNavbar() {
   const pathname = usePathname()
+  const { t } = useTranslation()
+
+  const navItems = [
+    {
+      href: "/",
+      icon: Home,
+      label: t("nav.home")
+    },
+    {
+      href: "/library",
+      icon: BookOpen,
+      label: t("nav.library")
+    },
+    {
+      href: "/pricing",
+      icon: Zap,
+      label: t("nav.premium")
+    },
+    {
+      href: "/account",
+      icon: User,
+      label: t("nav.profile")
+    }
+  ]
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">

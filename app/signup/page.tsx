@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslation } from "@/hooks/useTranslation"
+import { LanguageFlags } from "@/components/language-flags"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -17,6 +19,7 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { signup, googleLogin } = useAuth()
+  const { t, isLoading: translationLoading } = useTranslation()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +33,7 @@ export default function SignupPage() {
       // Redirect to verification page with email parameter
       router.push(`/verify?email=${encodeURIComponent(email)}`)
     } else {
-      setError("Bu e-posta adresi zaten kullanılıyor")
+      setError(t("auth.email_exists"))
     }
 
     setIsLoading(false)
@@ -40,24 +43,28 @@ export default function SignupPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-center">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex-1"></div>
           <Link href="/" className="inline-flex items-center gap-2">
             <img src="/fastreado-logo.png" alt="Fastreado" className="h-16 w-auto logo-img" />
           </Link>
+          <div className="flex-1 flex justify-end">
+            <LanguageFlags />
+          </div>
         </div>
       </header>
 
       <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2">Hesap oluşturun</h1>
-            <p className="text-muted-foreground">Ücretsiz başlayın, kredi kartı gerektirmez</p>
+            <h1 className="text-2xl font-bold mb-2">{t("auth.create_account")}</h1>
+            <p className="text-muted-foreground">{t("auth.signup_subtitle")}</p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6">
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="name">Ad Soyad</Label>
+                <Label htmlFor="name">{t("auth.name")}</Label>
                 <Input
                   id="name"
                   type="text"
@@ -68,7 +75,7 @@ export default function SignupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">E-posta</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -79,7 +86,7 @@ export default function SignupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Şifre</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -93,7 +100,7 @@ export default function SignupPage() {
               {error && <p className="text-sm text-red-500">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Hesap oluşturuluyor..." : "Hesap Oluştur"}
+                {isLoading ? t("auth.creating_account") : t("auth.signup")}
               </Button>
             </form>
 
@@ -102,7 +109,7 @@ export default function SignupPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">veya</span>
+                <span className="bg-card px-2 text-muted-foreground">{t("common.or")}</span>
               </div>
             </div>
 
@@ -131,13 +138,13 @@ export default function SignupPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google ile Kayıt Ol
+              {t("auth.google_signup")}
             </Button>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Zaten hesabınız var mı? </span>
+              <span className="text-muted-foreground">{t("auth.already_have_account")} </span>
               <Link href="/login" className="text-primary hover:underline">
-                Giriş yapın
+                {t("auth.login")}
               </Link>
             </div>
 

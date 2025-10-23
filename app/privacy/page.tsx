@@ -1,122 +1,191 @@
+"use client"
+
 import Link from "next/link"
-import { ArrowLeft, Zap } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
+import { LanguageFlags } from "@/components/language-flags"
 
 export default function PrivacyPage() {
+  const { t, language } = useTranslation()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold">Fastreado</span>
-          </Link>
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {language === 'tr' ? 'Ana Sayfa' : 'Home'}
+              </Link>
+            </Button>
+            <img src="/fastreado-logo.png" alt="Fastreado" className="h-8 w-auto logo-img" />
+          </div>
+          <LanguageFlags />
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-16 max-w-4xl">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Ana Sayfaya Dön
-        </Link>
+      {/* Content */}
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-4xl font-bold mb-8 font-fragor">
+          {language === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}
+        </h1>
 
-        <h1 className="text-4xl font-bold mb-8">Gizlilik Politikası</h1>
+        <div className="prose prose-lg max-w-none space-y-8">
+          <p className="text-muted-foreground">
+            {language === 'tr' 
+              ? 'Son güncelleme: 23 Ekim 2025'
+              : 'Last updated: October 23, 2025'
+            }
+          </p>
 
-        <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">1. Toplanan Bilgiler</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Fastreado olarak, size daha iyi hizmet verebilmek için bazı kişisel bilgilerinizi topluyoruz. Bu bilgiler
-              arasında e-posta adresiniz, yüklediğiniz PDF dosyaları ve okuma tercihleri yer almaktadır.
-            </p>
-          </section>
+          {language === 'tr' ? (
+            <>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">1. Toplanan Bilgiler</h2>
+                <p className="text-muted-foreground mb-4">
+                  Fastreado olarak, hizmetlerimizi sunabilmek için aşağıdaki bilgileri topluyoruz:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Hesap bilgileri (e-posta, ad, şifre)</li>
+                  <li>Yüklediğiniz PDF dosyaları</li>
+                  <li>Okuma istatistikleri ve tercihleri</li>
+                  <li>Cihaz ve tarayıcı bilgileri</li>
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">2. Bilgilerin Kullanımı</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              Topladığımız bilgileri şu amaçlarla kullanıyoruz:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>Hesabınızı oluşturmak ve yönetmek</li>
-              <li>PDF dosyalarınızı saklamak ve işlemek</li>
-              <li>AI destekli özet ve podcast özellikleri sunmak</li>
-              <li>Ödeme işlemlerini gerçekleştirmek</li>
-              <li>Müşteri desteği sağlamak</li>
-              <li>Hizmetlerimizi geliştirmek</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">2. Bilgilerin Kullanımı</h2>
+                <p className="text-muted-foreground mb-4">
+                  Topladığımız bilgileri şu amaçlarla kullanırız:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Hizmetlerimizi sunmak ve geliştirmek</li>
+                  <li>Kullanıcı deneyimini kişiselleştirmek</li>
+                  <li>Teknik destek sağlamak</li>
+                  <li>Güvenlik ve dolandırıcılık önleme</li>
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">3. Veri Güvenliği</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Verilerinizin güvenliği bizim için önceliklidir. Tüm verileriniz şifrelenmiş olarak saklanır ve endüstri
-              standardı güvenlik protokolleri ile korunur. PDF dosyalarınız güvenli bulut depolama sistemlerinde
-              saklanır ve sadece sizin erişiminize açıktır.
-            </p>
-          </section>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">3. Bilgi Paylaşımı</h2>
+                <p className="text-muted-foreground">
+                  Kişisel bilgilerinizi üçüncü taraflarla paylaşmayız. Sadece yasal zorunluluklar 
+                  veya güvenlik tehditleri durumunda gerekli bilgileri yetkili makamlarla paylaşabiliriz.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">4. Üçüncü Taraf Hizmetler</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              Hizmetlerimizi sunabilmek için aşağıdaki üçüncü taraf hizmetleri kullanıyoruz:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>
-                <strong>Stripe:</strong> Ödeme işlemleri için
-              </li>
-              <li>
-                <strong>Vercel Blob:</strong> PDF dosya depolama için
-              </li>
-              <li>
-                <strong>Google Gemini AI:</strong> AI özet ve podcast özellikleri için
-              </li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">4. Veri Güvenliği</h2>
+                <p className="text-muted-foreground">
+                  Verilerinizi korumak için endüstri standardı güvenlik önlemleri kullanıyoruz. 
+                  Tüm veriler şifrelenerek saklanır ve güvenli sunucularda barındırılır.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">5. Çerezler</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Web sitemiz, kullanıcı deneyimini iyileştirmek ve hizmetlerimizi optimize etmek için çerezler kullanır.
-              Tarayıcı ayarlarınızdan çerezleri yönetebilirsiniz.
-            </p>
-          </section>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">5. Çerezler</h2>
+                <p className="text-muted-foreground">
+                  Web sitemizde kullanıcı deneyimini iyileştirmek için çerezler kullanıyoruz. 
+                  Tarayıcı ayarlarınızdan çerezleri devre dışı bırakabilirsiniz.
+                </p>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">6. Haklarınız</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">KVKK kapsamında aşağıdaki haklara sahipsiniz:</p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
-              <li>İşlenmişse buna ilişkin bilgi talep etme</li>
-              <li>Verilerin düzeltilmesini isteme</li>
-              <li>Verilerin silinmesini veya yok edilmesini isteme</li>
-              <li>Hesabınızı ve tüm verilerinizi silme</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">6. Kullanıcı Hakları</h2>
+                <p className="text-muted-foreground mb-4">
+                  KVKK kapsamında aşağıdaki haklarınız bulunmaktadır:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+                  <li>Kişisel verilerinizin düzeltilmesini isteme</li>
+                  <li>Kişisel verilerinizin silinmesini isteme</li>
+                  <li>Hesabınızı kapatma</li>
+                </ul>
+              </section>
+            </>
+          ) : (
+            <>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">1. Information We Collect</h2>
+                <p className="text-muted-foreground mb-4">
+                  As Fastreado, we collect the following information to provide our services:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Account information (email, name, password)</li>
+                  <li>PDF files you upload</li>
+                  <li>Reading statistics and preferences</li>
+                  <li>Device and browser information</li>
+                </ul>
+              </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4">7. İletişim</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Gizlilik politikamız hakkında sorularınız için{" "}
-              <Link href="/support" className="text-primary hover:underline">
-                destek sayfamızdan
-              </Link>{" "}
-              bizimle iletişime geçebilirsiniz.
-            </p>
-          </section>
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">2. How We Use Information</h2>
+                <p className="text-muted-foreground mb-4">
+                  We use the collected information for the following purposes:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Provide and improve our services</li>
+                  <li>Personalize user experience</li>
+                  <li>Provide technical support</li>
+                  <li>Security and fraud prevention</li>
+                </ul>
+              </section>
 
-          <section>
-            <p className="text-sm text-muted-foreground">
-              Son güncelleme:{" "}
-              {new Date().toLocaleDateString("tr-TR", { year: "numeric", month: "long", day: "numeric" })}
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">3. Information Sharing</h2>
+                <p className="text-muted-foreground">
+                  We do not share your personal information with third parties. We may only share 
+                  necessary information with authorities in case of legal obligations or security threats.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">4. Data Security</h2>
+                <p className="text-muted-foreground">
+                  We use industry-standard security measures to protect your data. All data is 
+                  stored encrypted and hosted on secure servers.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">5. Cookies</h2>
+                <p className="text-muted-foreground">
+                  We use cookies on our website to improve user experience. You can disable 
+                  cookies from your browser settings.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">6. User Rights</h2>
+                <p className="text-muted-foreground mb-4">
+                  Under GDPR, you have the following rights:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Know whether your personal data is being processed</li>
+                  <li>Request correction of your personal data</li>
+                  <li>Request deletion of your personal data</li>
+                  <li>Close your account</li>
+                </ul>
+              </section>
+            </>
+          )}
+
+          <section className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-3 font-fragor">
+              {language === 'tr' ? 'İletişim' : 'Contact'}
+            </h3>
+            <p className="text-muted-foreground">
+              {language === 'tr'
+                ? 'Gizlilik politikamız hakkında sorularınız için: muhammetatmaca79@gmail.com'
+                : 'For questions about our privacy policy: muhammetatmaca79@gmail.com'
+              }
             </p>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

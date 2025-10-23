@@ -25,45 +25,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // First try to get user from localStorage
-      const currentUser = authService.getCurrentUser()
-      
-      if (currentUser) {
-        setUser(currentUser)
-        setIsLoading(false)
-        return
-      }
-
-      // Check for user data in cookies (from Google OAuth)
-      const userDataCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('user-data='))
-        ?.split('=')[1]
-
-      if (userDataCookie) {
-        try {
-          const userData = JSON.parse(decodeURIComponent(userDataCookie))
-          localStorage.setItem('user', JSON.stringify(userData))
-          setUser(userData)
-          setIsLoading(false)
-          return
-        } catch (error) {
-          console.error('Failed to parse user data cookie:', error)
-        }
-      }
-
-      // If no user in localStorage or cookies, try to fetch from server
       try {
-        const response = await fetch('/api/auth/me', { credentials: 'include' })
-        if (response.ok) {
-          const userData = await response.json()
-          if (userData.user) {
-            localStorage.setItem('user', JSON.stringify(userData.user))
-            setUser(userData.user)
+        // Sadece localStorage'dan user bilgisi al
+        const currentUser = authService.getCurrentUser()
+        
+        if (currentUser) {
+          setUser(currentUser)
+        }
+
+        // Cookie'den user bilgisi kontrol et
+        const userDataCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('user-data='))
+          ?.split('=')[1]
+
+        if (userDataCookie) {
+          try {
+            const userData = JSON.parse(decodeURIComponent(userDataCookie))
+            localStorage.setItem('user', JSON.stringify(userData))
+            setUser(userData)
+          } catch (error) {
+            // Cookie parse hatası, görmezden gel
           }
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error)
+        // Auth hatası, görmezden gel
       }
       
       setIsLoading(false)

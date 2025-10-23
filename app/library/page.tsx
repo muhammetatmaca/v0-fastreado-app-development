@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Upload, BookOpen, FileText, Trash2, Play, LogOut, User } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
+import { LanguageFlags } from "@/components/language-flags"
 import Link from "next/link"
 import { AIFeaturesDialog } from "@/components/ai-features-dialog"
 import { useAuth } from "@/contexts/auth-context"
@@ -29,6 +31,7 @@ interface PDF {
 
 export default function LibraryPage() {
   const { user, logout, isLoading, updateUser } = useAuth()
+  const { t, isLoading: translationLoading } = useTranslation()
   const router = useRouter()
 
   useEffect(() => {
@@ -153,7 +156,7 @@ export default function LibraryPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <img src="/fastreado-logo.png" alt="Fastreado" className="h-14 w-auto mx-auto mb-4 animate-pulse logo-img" />
-          <p className="text-muted-foreground">Yükleniyor...</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     )
@@ -201,14 +204,15 @@ export default function LibraryPage() {
             </Link>
 
             <div className="flex items-center gap-4">
+              <LanguageFlags />
               <span className="text-sm text-muted-foreground">
                 {pdfs.length} / {user.plan === "premium" ? "∞" : maxPdfs} PDF (
-                {user.plan === "premium" ? "Premium" : "Ücretsiz"})
+                {user.plan === "premium" ? t("library.premium") : t("library.free")})
               </span>
               {user.plan === "free" && (
                 <Link href="/pricing">
                   <Button variant="outline" size="sm">
-                    Premium'a Geç
+                    {t("library.upgrade_to_premium")}
                   </Button>
                 </Link>
               )}
@@ -221,18 +225,18 @@ export default function LibraryPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("library.my_account")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/account">Hesap Ayarları</Link>
+                    <Link href="/account">{t("library.account_settings")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/pricing">Abonelik</Link>
+                    <Link href="/pricing">{t("library.subscription")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-red-500">
                     <LogOut className="w-4 h-4 mr-2" />
-                    Çıkış Yap
+                    {t("auth.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -255,7 +259,7 @@ export default function LibraryPage() {
               {user.plan === "free" && (
                 <Link href="/pricing">
                   <Button variant="outline" size="sm" className="text-xs h-6 px-2">
-                    Yükselt
+                    {t("library.upgrade")}
                   </Button>
                 </Link>
               )}
@@ -266,8 +270,8 @@ export default function LibraryPage() {
 
       <main className="container mx-auto px-4 py-6 md:py-8">
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Kütüphanem</h1>
-          <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">PDF'lerinizi yükleyin ve hızlı okuma deneyimine başlayın</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("library.title")}</h1>
+          <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">{t("library.subtitle")}</p>
 
           <label htmlFor="pdf-upload">
             <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer p-4 md:p-8 text-center">
@@ -280,11 +284,11 @@ export default function LibraryPage() {
                 disabled={isUploading || !canUpload}
               />
               <Upload className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-3 md:mb-4 text-muted-foreground" />
-              <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">{isUploading ? "Yükleniyor..." : "PDF Yükle"}</h3>
+              <h3 className="text-base md:text-lg font-semibold mb-1 md:mb-2">{isUploading ? t("library.uploading") : t("library.upload")}</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
                 {!canUpload
-                  ? `Ücretsiz planda maksimum ${maxPdfs} PDF yükleyebilirsiniz`
-                  : "Tıklayın veya sürükleyip bırakın"}
+                  ? t("library.max_pdfs", { count: maxPdfs })
+                  : t("library.click_or_drag")}
               </p>
             </Card>
           </label>
@@ -310,7 +314,7 @@ export default function LibraryPage() {
                 <div className="p-3 md:p-4">
                   <h3 className="font-semibold mb-1 truncate text-sm md:text-base">{pdf.title}</h3>
                   <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
-                    {pdf.pageCount} sayfa • {pdf.progress > 0 ? `%${pdf.progress} tamamlandı` : "Başlanmadı"}
+                    {pdf.pageCount} {t("library.pages")} • {pdf.progress > 0 ? `%${pdf.progress} ${t("library.completed")}` : t("library.not_started")}
                   </p>
 
                   <div className="mb-2 md:mb-3">
@@ -342,7 +346,7 @@ export default function LibraryPage() {
                       <Link href={`/read/rsvp/${pdf.id}`} className="flex-1">
                         <Button size="sm" className="w-full gap-1 text-xs">
                           <Play className="w-3 h-3" />
-                          RSVP Okuma
+                          {t("library.rsvp_reading")}
                         </Button>
                       </Link>
                       <Button size="sm" variant="outline" onClick={() => handleDelete(pdf.id)} className="px-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
@@ -352,7 +356,7 @@ export default function LibraryPage() {
                     <Link href={`/read/bionic/${pdf.id}`} className="block">
                       <Button size="sm" variant="outline" className="w-full gap-1 bg-transparent text-xs">
                         <BookOpen className="w-3 h-3" />
-                        Bionic Okuma
+                        {t("library.bionic_reading")}
                       </Button>
                     </Link>
                   </div>
@@ -363,8 +367,8 @@ export default function LibraryPage() {
         ) : (
           <div className="text-center py-12 md:py-16">
             <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 text-muted-foreground" />
-            <h3 className="text-lg md:text-xl font-semibold mb-2">Henüz PDF yok</h3>
-            <p className="text-sm md:text-base text-muted-foreground">İlk PDF'nizi yükleyerek başlayın</p>
+            <h3 className="text-lg md:text-xl font-semibold mb-2">{t("library.no_pdfs")}</h3>
+            <p className="text-sm md:text-base text-muted-foreground">{t("library.upload_first")}</p>
           </div>
         )}
       </main>

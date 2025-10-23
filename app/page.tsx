@@ -1,8 +1,28 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { BookOpen, Sparkles, Zap } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
+import { LanguageFlags } from "@/components/language-flags"
+import { DemoVideo } from "@/components/demo-video"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function HomePage() {
+  const { t, isLoading, language } = useTranslation()
+  const { user, logout } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <img src="/fastreado-logo.png" alt="Fastreado" className="h-12 w-auto mx-auto mb-4 animate-pulse logo-img" />
+          <p className="text-muted-foreground">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -11,51 +31,74 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <img src="/fastreado-logo.png" alt="Fastreado" className="h-10 w-auto logo-img" />
           </div>
+
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Özellikler
+              {t("nav.features")}
             </Link>
             <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Fiyatlandırma
+              {t("nav.pricing")}
             </Link>
             <Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              SSS
+              {t("nav.faq")}
             </Link>
           </nav>
+
           <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Giriş Yap</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Başla</Link>
-            </Button>
+            <LanguageFlags />
+            {user ? (
+              // Giriş yapmış kullanıcı
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/library">{t("nav.library")}</Link>
+                </Button>
+                <Button variant="ghost" onClick={logout}>
+                  {t("auth.logout")}
+                </Button>
+              </>
+            ) : (
+              // Giriş yapmamış kullanıcı
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">{t("auth.login")}</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/signup">{t("common.start")}</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 md:py-32">
+      <section className="container mx-auto px-4 py-12 md:py-20 lg:py-32">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm mb-6">
             <Sparkles className="h-4 w-4" />
-            <span>Yapay zeka destekli hızlı okuma</span>
+            <span>{t("home.hero_badge")}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-balance leading-tight font-fragor">
-            Okuma hızınızı <span className="text-primary">3 katına</span> çıkarın
+            {t("home.hero_title")}
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 text-pretty leading-relaxed max-w-2xl mx-auto">
-            RSVP ve Biyonik Okuma teknolojileri ile PDF'lerinizi daha hızlı okuyun. Yapay zeka ile özet ve podcast
-            oluşturun.
+            {t("home.hero_subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" asChild className="w-full sm:w-auto">
-              <Link href="/signup">Ücretsiz Başla</Link>
+              <Link href="/signup">{t("home.get_started")}</Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="w-full sm:w-auto bg-transparent">
-              <Link href="#demo">Demo İzle</Link>
+              <Link href="#demo">{t("home.watch_demo")}</Link>
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-4">Kredi kartı gerektirmez • Ayda 2 PDF ücretsiz</p>
+          <p className="text-sm text-muted-foreground mt-4">{t("home.no_credit_card")}</p>
+
+          {/* Demo Video Component */}
+          <DemoVideo />
+
+
         </div>
       </section>
 
@@ -63,8 +106,8 @@ export default function HomePage() {
       <section id="features" className="container mx-auto px-4 py-20 border-t border-border">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">Güçlü özellikler</h2>
-            <p className="text-lg text-muted-foreground">Okuma deneyiminizi geliştiren modern araçlar</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">{t("home.features_title")}</h2>
+            <p className="text-lg text-muted-foreground">{t("home.features_subtitle")}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -73,20 +116,20 @@ export default function HomePage() {
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Zap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 font-fragor">RSVP Okuma</h3>
+              <h3 className="text-xl font-semibold mb-2 font-fragor">{t("home.rsvp_title")}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Kelime kelime hızlı okuma modu. Orta harfi vurgulama ile odaklanmanızı artırın.
+                {t("home.rsvp_desc")}
               </p>
             </div>
 
             {/* Feature 2 */}
             <div className="bg-card border border-border rounded-lg p-6">
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
-                <BookOpen className="h-6 w-6 text-accent" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <BookOpen className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 font-fragor">Biyonik Okuma</h3>
+              <h3 className="text-xl font-semibold mb-2 font-fragor">{t("home.bionic_title")}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                İlk ve son harfleri kalın göstererek doğal okuma hızınızı artırın.
+                {t("home.bionic_desc")}
               </p>
             </div>
 
@@ -95,9 +138,9 @@ export default function HomePage() {
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 font-fragor">AI Özet & Podcast</h3>
+              <h3 className="text-xl font-semibold mb-2 font-fragor">{t("home.ai_title")}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Gemini AI ile otomatik özet oluşturun ve podcast'e dönüştürün.
+                {t("home.ai_desc")}
               </p>
             </div>
           </div>
@@ -107,58 +150,72 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20 border-t border-border">
         <div className="max-w-4xl mx-auto text-center bg-card border border-border rounded-2xl p-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">Hızlı okumaya bugün başlayın</h2>
-          <p className="text-lg text-muted-foreground mb-8">Ücretsiz hesap oluşturun ve ayda 2 PDF ile başlayın</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">{t("home.cta_title")}</h2>
+          <p className="text-lg text-muted-foreground mb-8">{t("home.cta_subtitle")}</p>
           <Button size="lg" asChild>
-            <Link href="/signup">Ücretsiz Başla</Link>
+            <Link href="/signup">{t("home.get_started")}</Link>
           </Button>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section id="faq" className="container mx-auto px-4 py-20 border-t border-border">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">Sıkça Sorulan Sorular</h2>
-            <p className="text-lg text-muted-foreground">Merak ettikleriniz</p>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-fragor">{t("home.faq_title")}</h2>
+            <p className="text-lg text-muted-foreground">{t("home.faq_subtitle")}</p>
           </div>
 
           <div className="space-y-6">
+            {/* FAQ Item 1 */}
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2 font-fragor">RSVP okuma nedir?</h3>
+              <h3 className="text-lg font-semibold mb-3 font-fragor">
+                {language === 'tr' ? 'Fastreado nasıl çalışır?' : 'How does Fastreado work?'}
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
-                RSVP (Rapid Serial Visual Presentation), kelimeleri tek tek ekranın ortasında göstererek okuma hızınızı
-                artıran bir tekniktir. Orta harfi vurgulayarak gözünüzün odaklanmasını kolaylaştırır.
+                {language === 'tr'
+                  ? 'PDF dosyalarınızı yükleyin ve RSVP veya Biyonik Okuma teknolojileri ile hızlı okuma deneyimi yaşayın. AI ile otomatik özet ve podcast oluşturabilirsiniz.'
+                  : 'Upload your PDF files and experience speed reading with RSVP or Bionic Reading technologies. Create automatic summaries and podcasts with AI.'
+                }
               </p>
             </div>
 
+            {/* FAQ Item 2 */}
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2 font-fragor">Biyonik okuma nasıl çalışır?</h3>
+              <h3 className="text-lg font-semibold mb-3 font-fragor">
+                {language === 'tr' ? 'Ücretsiz planda neler var?' : 'What\'s included in the free plan?'}
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
-                Biyonik okuma, kelimelerin ilk ve son harflerini kalın göstererek beynin kelimeleri daha hızlı
-                tanımasını sağlar. Bu sayede doğal okuma hızınız artar.
+                {language === 'tr'
+                  ? 'Ücretsiz planda ayda 2 PDF yükleme hakkınız var. RSVP ve Biyonik Okuma özelliklerini kullanabilirsiniz.'
+                  : 'The free plan includes 2 PDF uploads per month. You can use RSVP and Bionic Reading features.'
+                }
               </p>
             </div>
 
+            {/* FAQ Item 3 */}
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2 font-fragor">AI özellikleri neler sunar?</h3>
+              <h3 className="text-lg font-semibold mb-3 font-fragor">
+                {language === 'tr' ? 'Hangi dosya formatları destekleniyor?' : 'What file formats are supported?'}
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
-                Premium üyelikle PDF'lerinizden otomatik özet oluşturabilir ve podcast senaryosu üretebilirsiniz. Gemini
-                AI teknolojisi kullanılarak içeriğiniz analiz edilir.
+                {language === 'tr'
+                  ? 'Şu anda sadece PDF dosyaları desteklenmektedir. Gelecekte daha fazla format eklenecektir.'
+                  : 'Currently, only PDF files are supported. More formats will be added in the future.'
+                }
               </p>
             </div>
 
+            {/* FAQ Item 4 */}
             <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2 font-fragor">Ücretsiz plan ile kaç PDF yükleyebilirim?</h3>
+              <h3 className="text-lg font-semibold mb-3 font-fragor">
+                {language === 'tr' ? 'AI özellikleri nasıl çalışır?' : 'How do AI features work?'}
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
-                Ücretsiz plan ile ayda 2 PDF yükleyebilirsiniz. Sınırsız PDF yüklemek için Premium plana geçebilirsiniz.
-              </p>
-            </div>
-
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-2 font-fragor">Hangi PDF formatları destekleniyor?</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Standart PDF formatları desteklenmektedir. Metin içeren tüm PDF'leri yükleyebilir ve okuyabilirsiniz.
+                {language === 'tr'
+                  ? 'Gemini AI kullanarak PDF içeriğinizden otomatik özet oluşturur ve bu özeti podcast formatına dönüştürür.'
+                  : 'Using Gemini AI, it creates automatic summaries from your PDF content and converts them into podcast format.'
+                }
               </p>
             </div>
           </div>
@@ -166,7 +223,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border mt-20">
+      <footer className="hidden md:block border-t border-border mt-20">
         <div className="container mx-auto px-4 py-12">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
@@ -180,17 +237,17 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="#features" className="hover:text-foreground transition-colors">
-                    Özellikler
+                    {t("nav.features")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/pricing" className="hover:text-foreground transition-colors">
-                    Fiyatlandırma
+                    {t("nav.pricing")}
                   </Link>
                 </li>
                 <li>
                   <Link href="#faq" className="hover:text-foreground transition-colors">
-                    SSS
+                    {t("nav.faq")}
                   </Link>
                 </li>
               </ul>
