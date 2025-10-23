@@ -4,8 +4,9 @@ import Link from "next/link"
 import Checkout from "@/components/checkout"
 import { getPlanById } from "@/lib/products"
 
-export default function CheckoutPage({ params }: { params: { planId: string } }) {
-  const plan = getPlanById(params.planId)
+export default async function CheckoutPage({ params }: { params: Promise<{ planId: string }> }) {
+  const { planId } = await params
+  const plan = getPlanById(planId)
 
   if (!plan || plan.id === "free") {
     notFound()
@@ -28,7 +29,7 @@ export default function CheckoutPage({ params }: { params: { planId: string } })
             <p className="text-muted-foreground">{plan.description}</p>
           </div>
 
-          <Checkout planId={params.planId} />
+          <Checkout planId={planId} />
         </div>
       </div>
     </div>

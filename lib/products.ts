@@ -3,6 +3,7 @@ export interface SubscriptionPlan {
   name: string
   description: string
   priceInCents: number
+  priceInCentsUSD: number
   features: string[]
   pdfLimit: number | null // null means unlimited
   hasAIFeatures: boolean
@@ -15,6 +16,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     name: "Ücretsiz",
     description: "Başlamak için ideal",
     priceInCents: 0,
+    priceInCentsUSD: 0,
     features: ["Ayda 2 PDF", "RSVP okuma modu", "Bionic okuma modu", "Temel özellikler"],
     pdfLimit: 2,
     hasAIFeatures: false,
@@ -23,7 +25,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: "premium",
     name: "Premium",
     description: "Sınırsız okuma deneyimi",
-    priceInCents: 4999, // 49.99 TRY/month
+    priceInCents: 9900, // 99.00 TRY/month
+    priceInCentsUSD: 299, // 2.99 USD/month
     features: [
       "Sınırsız PDF",
       "RSVP okuma modu",
@@ -39,4 +42,20 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 
 export function getPlanById(planId: string): SubscriptionPlan | undefined {
   return SUBSCRIPTION_PLANS.find((plan) => plan.id === planId)
+}
+
+export function getPlanPrice(plan: SubscriptionPlan, language: string = 'tr'): { price: number, currency: string, symbol: string } {
+  if (language === 'en') {
+    return {
+      price: plan.priceInCentsUSD / 100,
+      currency: 'USD',
+      symbol: '$'
+    }
+  } else {
+    return {
+      price: plan.priceInCents / 100,
+      currency: 'TRY',
+      symbol: '₺'
+    }
+  }
 }

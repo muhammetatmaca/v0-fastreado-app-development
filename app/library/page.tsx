@@ -27,6 +27,7 @@ interface PDF {
   pageCount: number
   uploadDate: string
   progress: number
+  isUserUploaded?: boolean // Kullanıcının yüklediği PDF'ler için
 }
 
 export default function LibraryPage() {
@@ -75,6 +76,7 @@ export default function LibraryPage() {
       pageCount: 542,
       uploadDate: "2024-01-15",
       progress: 0,
+      isUserUploaded: false,
     },
     {
       id: "2",
@@ -83,6 +85,7 @@ export default function LibraryPage() {
       pageCount: 324,
       uploadDate: "2024-01-14",
       progress: 25,
+      isUserUploaded: false,
     },
     {
       id: "3",
@@ -91,6 +94,7 @@ export default function LibraryPage() {
       pageCount: 198,
       uploadDate: "2024-01-13",
       progress: 60,
+      isUserUploaded: false,
     },
     {
       id: "4",
@@ -99,6 +103,7 @@ export default function LibraryPage() {
       pageCount: 156,
       uploadDate: "2024-01-12",
       progress: 100,
+      isUserUploaded: false,
     },
     {
       id: "5",
@@ -107,6 +112,7 @@ export default function LibraryPage() {
       pageCount: 287,
       uploadDate: "2024-01-11",
       progress: 0,
+      isUserUploaded: false,
     },
     {
       id: "6",
@@ -115,6 +121,7 @@ export default function LibraryPage() {
       pageCount: 342,
       uploadDate: "2024-01-10",
       progress: 35,
+      isUserUploaded: false,
     },
     {
       id: "7",
@@ -123,6 +130,7 @@ export default function LibraryPage() {
       pageCount: 456,
       uploadDate: "2024-01-09",
       progress: 80,
+      isUserUploaded: false,
     },
     {
       id: "8",
@@ -131,6 +139,7 @@ export default function LibraryPage() {
       pageCount: 724,
       uploadDate: "2024-01-08",
       progress: 15,
+      isUserUploaded: false,
     },
     {
       id: "9",
@@ -139,6 +148,7 @@ export default function LibraryPage() {
       pageCount: 198,
       uploadDate: "2024-01-07",
       progress: 90,
+      isUserUploaded: false,
     },
     {
       id: "10",
@@ -147,6 +157,7 @@ export default function LibraryPage() {
       pageCount: 234,
       uploadDate: "2024-01-06",
       progress: 45,
+      isUserUploaded: false,
     },
   ])
   const [isUploading, setIsUploading] = useState(false)
@@ -181,6 +192,7 @@ export default function LibraryPage() {
         pageCount: Math.floor(Math.random() * 400) + 100,
         uploadDate: new Date().toISOString().split("T")[0],
         progress: 0,
+        isUserUploaded: true, // Kullanıcının yüklediği PDF
       }
       setPdfs([newPdf, ...pdfs])
       setIsUploading(false)
@@ -192,7 +204,8 @@ export default function LibraryPage() {
   }
 
   const maxPdfs = user.plan === "premium" ? Number.POSITIVE_INFINITY : 2
-  const canUpload = pdfs.length < maxPdfs
+  const userUploadedPdfs = pdfs.filter(pdf => pdf.isUserUploaded)
+  const canUpload = userUploadedPdfs.length < maxPdfs
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,10 +216,11 @@ export default function LibraryPage() {
               <img src="/fastreado-logo.png" alt="Fastreado" className="h-10 w-auto logo-img" />
             </Link>
 
-            <div className="flex items-center gap-4">
+            {/* Desktop Header */}
+            <div className="hidden md:flex items-center gap-4">
               <LanguageFlags />
               <span className="text-sm text-muted-foreground">
-                {pdfs.length} / {user.plan === "premium" ? "∞" : maxPdfs} PDF (
+                {userUploadedPdfs.length} / {user.plan === "premium" ? "∞" : maxPdfs} PDF (
                 {user.plan === "premium" ? t("library.premium") : t("library.free")})
               </span>
               {user.plan === "free" && (
@@ -241,6 +255,34 @@ export default function LibraryPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center gap-2">
+              <LanguageFlags />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1 px-2">
+                    <User className="w-4 h-4" />
+                    <span className="text-xs truncate max-w-20">{user.name}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{t("library.my_account")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account">{t("library.account_settings")}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/pricing">{t("library.subscription")}</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="text-red-500">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {t("auth.logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </header>
@@ -250,7 +292,7 @@ export default function LibraryPage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between text-sm">
             <div className="text-muted-foreground">
-              {pdfs.length} / {user.plan === "premium" ? "∞" : maxPdfs} PDF
+              {userUploadedPdfs.length} / {user.plan === "premium" ? "∞" : maxPdfs} PDF
             </div>
             <div className="flex items-center gap-2">
               <div className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
