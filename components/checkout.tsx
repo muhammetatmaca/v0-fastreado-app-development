@@ -193,13 +193,74 @@ function LemonSqueezyCheckout({ planId }: { planId: string }) {
   const { language } = useTranslation()
   const plan = getPlanById(planId)!
   const planPrice = getPlanPrice(plan, language)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const router = useRouter()
 
-  const handleLemonSqueezyCheckout = () => {
-    // Lemon Squeezy checkout URL'i oluştur
-    const checkoutUrl = `https://fastreado.lemonsqueezy.com/checkout/buy/${planId}?embed=1`
+  const handleLemonSqueezyCheckout = async () => {
+    setIsProcessing(true)
     
-    // Yeni pencerede aç
-    window.open(checkoutUrl, '_blank', 'width=800,height=600')
+    try {
+      // Get user info from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      
+      if (!user.id || !user.email) {
+        throw new Error('User information not found')
+      }
+      
+      // Import Lemon Squeezy function dynamically
+      const { createLemonSqueezyCheckout } = await import('@/app/actions/lemonsqueezy')
+      
+      // Create checkout session
+      const result = await createLemonSqueezyCheckout(planId, user.id, user.email)
+      
+      if (result.success && result.checkoutUrl) {
+        // Open checkout in new window
+        window.open(result.checkoutUrl, '_blank', 'width=800,height=600')
+        
+        // Show success message after a delay
+        setTimeout(() => {
+          setIsSuccess(true)
+          setTimeout(() => {
+            router.push('/library?upgraded=true')
+          }, 2000)
+        }, 3000)
+      } else {
+        throw new Error(result.error || 'Failed to create checkout')
+      }
+      
+    } catch (error) {
+      console.error('Lemon Squeezy checkout error:', error)
+      alert(language === 'tr' 
+        ? 'Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.'
+        : 'Failed to create checkout. Please try again.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="p-8 text-center">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold mb-2">
+          {language === 'tr' ? 'Ödeme Tamamlandı!' : 'Payment Completed!'}
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          {language === 'tr' 
+            ? `${plan.name} planına başarıyla yükseltildiniz.`
+            : `Successfully upgraded to ${plan.name} plan.`
+          }
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {language === 'tr' 
+            ? 'Kütüphane sayfasına yönlendiriliyorsunuz...'
+            : 'Redirecting to library...'
+          }
+        </p>
+      </Card>
+    )
   }
 
   return (
@@ -225,9 +286,23 @@ function LemonSqueezyCheckout({ planId }: { planId: string }) {
         </div>
       </div>
 
-      <Button onClick={handleLemonSqueezyCheckout} className="w-full" size="lg">
-        <Lock className="w-4 h-4 mr-2" />
-        {language === 'tr' ? 'Lemon Squeezy ile Öde' : 'Pay with Lemon Squeezy'}
+      <Button 
+        onClick={handleLemonSqueezyCheckout} 
+        className="w-full" 
+        size="lg"
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+            {language === 'tr' ? 'Hazırlanıyor...' : 'Preparing...'}
+          </>
+        ) : (
+          <>
+            <Lock className="w-4 h-4 mr-2" />
+            {language === 'tr' ? 'Lemon Squeezy ile Öde' : 'Pay with Lemon Squeezy'}
+          </>
+        )}
       </Button>
 
       <p className="text-xs text-muted-foreground mt-4">

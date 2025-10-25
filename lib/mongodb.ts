@@ -12,9 +12,6 @@ const options: MongoClientOptions = {
   serverSelectionTimeoutMS: 10000,
   socketTimeoutMS: 45000,
   connectTimeoutMS: 10000,
-  tls: true,
-  tlsAllowInvalidCertificates: true,
-  tlsInsecure: true,
 }
 
 let client: MongoClient

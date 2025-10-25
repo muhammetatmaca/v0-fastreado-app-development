@@ -19,23 +19,25 @@ export interface GooglePlayPurchase {
   purchaseState: number
 }
 
-// Mock Google Play products (replace with actual Google Play Console products)
-export const googlePlayProducts: GooglePlayProduct[] = [
-  {
-    productId: "fastreado_premium_monthly",
-    price: "₺99.99",
-    currency: "TRY",
-    title: "Fastreado Premium - Aylık",
-    description: "Sınırsız PDF yükleme ve premium özellikler"
-  },
-  {
-    productId: "fastreado_premium_yearly", 
-    price: "₺999.99",
-    currency: "TRY",
-    title: "Fastreado Premium - Yıllık",
-    description: "Sınırsız PDF yükleme ve premium özellikler (2 ay ücretsiz)"
-  }
-]
+// Get Google Play products function instead of exporting object
+export async function getGooglePlayProductList(): Promise<GooglePlayProduct[]> {
+  return [
+    {
+      productId: "fastreado_premium_monthly",
+      price: "₺99.99",
+      currency: "TRY",
+      title: "Fastreado Premium - Aylık",
+      description: "Sınırsız PDF yükleme ve premium özellikler"
+    },
+    {
+      productId: "fastreado_premium_yearly", 
+      price: "₺999.99",
+      currency: "TRY",
+      title: "Fastreado Premium - Yıllık",
+      description: "Sınırsız PDF yükleme ve premium özellikler (2 ay ücretsiz)"
+    }
+  ]
+}
 
 // Initialize Google Play Billing (called from mobile app)
 export async function initializeGooglePlayBilling() {
@@ -77,7 +79,8 @@ export async function getGooglePlayProducts() {
     }
     
     // Fallback for web version
-    return { success: true, products: googlePlayProducts }
+    const products = await getGooglePlayProductList()
+    return { success: true, products }
   } catch (error) {
     console.error('Get products error:', error)
     return { success: false, error: 'Failed to get products' }

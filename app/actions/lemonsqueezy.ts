@@ -1,18 +1,26 @@
 "use server"
 
-import { SUBSCRIPTION_PLANS, getPlanPrice } from "@/lib/products"
+import { SUBSCRIPTION_PLANS } from '@/lib/products'
 
-export async function createLemonSqueezyCheckout(planId: string, language: string = 'tr') {
-  const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId)
+// Product variant mapping - Lemon Squeezy'den alınan gerçek ID'ler
+const VARIANT_IDS = {
+  premium: '1057551', // FASTREADO PRO - Monthly (₺99.90)
+  yearly: '1057551'   // Şimdilik aynı variant, yearly eklenirse güncellenecek
+}
 
-  if (!plan || plan.id === "free") {
-    throw new Error(`Invalid plan: "${planId}"`)
-  }
-
-  const planPrice = getPlanPrice(plan, language)
-
+export async function createLemonSqueezyCheckout(planId: string, userId: string, userEmail: string) {
   try {
-    // Lemon Squeezy API ile checkout session oluştur
+    const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId)
+    if (!plan || plan.id === 'free') {
+      throw new Error(`Invalid plan: "${planId}"`)
+    }
+
+    const variantId = VARIANT_IDS[planId as keyof typeof VARIANT_IDS]
+    if (!variantId) {
+      throw new Error(`No variant ID found for plan: ${planId}`)
+    }
+
+    // Use direct API call instead of SDK for better control
     const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
       method: 'POST',
       headers: {
@@ -27,10 +35,9 @@ export async function createLemonSqueezyCheckout(planId: string, language: strin
             product_options: {
               name: plan.name,
               description: plan.description,
-              media: [],
               redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/library?upgraded=true`,
-              receipt_button_text: language === 'tr' ? 'Kütüphaneye Git' : 'Go to Library',
-              receipt_link_url: `${process.env.NEXT_PUBLIC_APP_URL}/library`,
+              receipt_button_text: 'Kütüphaneye Git',
+              receipt_thank_you_note: 'Fastreado Premium\'a hoş geldiniz!',
             },
             checkout_options: {
               embed: true,
@@ -38,19 +45,14 @@ export async function createLemonSqueezyCheckout(planId: string, language: strin
               logo: true,
             },
             checkout_data: {
-              email: '', // Kullanıcı email'i buraya gelecek
-              name: '',  // Kullanıcı adı buraya gelecek
-              billing_address: {},
-              tax_number: '',
-              discount_code: '',
+              email: userEmail,
               custom: {
-                user_id: '', // Kullanıcı ID'si buraya gelecek
-                plan_id: planId,
-                language: language,
+                user_id: userId,
+                plan_id: planId
               },
             },
             expires_at: null,
-            preview: true,
+            preview: false,
             test_mode: process.env.NODE_ENV !== 'production',
           },
           relationships: {
@@ -63,7 +65,7 @@ export async function createLemonSqueezyCheckout(planId: string, language: strin
             variant: {
               data: {
                 type: 'variants',
-                id: planId === 'premium' ? 'premium_variant_id' : 'basic_variant_id', // Gerçek variant ID'leri buraya
+                id: variantId,
               },
             },
           },
@@ -72,21 +74,29 @@ export async function createLemonSqueezyCheckout(planId: string, language: strin
     })
 
     if (!response.ok) {
+      const errorData = await response.json()
+      console.error('Lemon Squeezy API error:', errorData)
       throw new Error(`Lemon Squeezy API error: ${response.statusText}`)
     }
 
     const data = await response.json()
-    return data.data.attributes.url
-
+    
+    return {
+      success: true,
+      checkoutUrl: data.data.attributes.url
+    }
   } catch (error) {
-    console.error("Lemon Squeezy checkout creation failed:", error)
-    throw new Error("Failed to create checkout session")
+    console.error('Lemon Squeezy checkout error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create checkout session'
+    }
   }
 }
 
 export async function getLemonSqueezyProducts() {
   try {
-    const response = await fetch('https://api.lemonsqueezy.com/v1/products', {
+    const response = await fetch(`https://api.lemonsqueezy.com/v1/products?filter[store_id]=${process.env.LEMONSQUEEZY_STORE_ID}`, {
       headers: {
         'Accept': 'application/vnd.api+json',
         'Authorization': `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`,
@@ -98,10 +108,99 @@ export async function getLemonSqueezyProducts() {
     }
 
     const data = await response.json()
-    return data.data
-
+    
+    return {
+      success: true,
+      products: data.data || []
+    }
   } catch (error) {
-    console.error("Failed to fetch Lemon Squeezy products:", error)
-    return []
+    console.error('Get Lemon Squeezy products error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get products'
+    }
+  }
+}
+
+export async function handleLemonSqueezyWebhook(eventName: string, payload: any) {
+  try {
+    console.log('Lemon Squeezy webhook received:', eventName, payload)
+
+    const { data } = payload
+    const customData = data.attributes.first_subscription_item?.subscription?.custom_data || 
+                      data.attributes.custom_data || {}
+    const userId = customData.user_id
+    const planId = customData.plan_id
+
+    if (!userId) {
+      console.error('No user ID found in webhook payload')
+      return { success: false, error: 'No user ID found' }
+    }
+
+    // Dynamic import to avoid connection issues
+    const { connectDB } = await import('@/lib/mongodb')
+    const { User } = await import('@/models/User')
+
+    await connectDB()
+    const user = await User.findById(userId)
+
+    if (!user) {
+      console.error('User not found:', userId)
+      return { success: false, error: 'User not found' }
+    }
+
+    switch (eventName) {
+      case 'subscription_created':
+      case 'subscription_updated':
+        // Upgrade user to premium
+        user.plan = 'premium'
+        
+        // Add purchase record
+        if (!user.purchases) {
+          user.purchases = []
+        }
+        
+        user.purchases.push({
+          provider: 'lemonsqueezy',
+          productId: planId || 'premium',
+          purchaseToken: data.id,
+          orderId: data.attributes.order_id?.toString(),
+          purchaseTime: new Date(data.attributes.created_at),
+          amount: data.attributes.subtotal / 100, // Convert cents to currency
+          currency: data.attributes.currency,
+          status: 'completed'
+        })
+        
+        await user.save()
+        console.log('User upgraded to premium:', userId)
+        break
+
+      case 'subscription_cancelled':
+      case 'subscription_expired':
+        // Downgrade user to free
+        user.plan = 'free'
+        await user.save()
+        console.log('User downgraded to free:', userId)
+        break
+
+      case 'order_created':
+        // Handle one-time purchase if needed
+        console.log('Order created:', data.id)
+        break
+
+      default:
+        console.log('Unhandled webhook event:', eventName)
+    }
+
+    return {
+      success: true,
+      message: 'Webhook processed successfully'
+    }
+  } catch (error) {
+    console.error('Lemon Squeezy webhook error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to process webhook'
+    }
   }
 }
