@@ -19,6 +19,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/alert-dialog"
 
 interface PDF {
   id: string
@@ -28,6 +38,7 @@ interface PDF {
   uploadDate: string
   progress: number
   isUserUploaded?: boolean // Kullanıcının yüklediği PDF'ler için
+  fileData?: string // Base64 encoded PDF data
 }
 
 export default function LibraryPage() {
@@ -68,7 +79,8 @@ export default function LibraryPage() {
     }
   }, [user, isLoading, updateUser, router])
 
-  const [pdfs, setPdfs] = useState<PDF[]>([
+  // Default library books (always available)
+  const defaultBooks: PDF[] = [
     {
       id: "1",
       title: "Nutuk - Mustafa Kemal Atatürk",
@@ -159,8 +171,50 @@ export default function LibraryPage() {
       progress: 45,
       isUserUploaded: false,
     },
-  ])
+  ]
+
+  const [pdfs, setPdfs] = useState<PDF[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; pdfId: string; pdfTitle: string }>({
+    open: false,
+    pdfId: '',
+    pdfTitle: ''
+  })
+
+  // Load PDFs from localStorage on component mount
+  useEffect(() => {
+    if (user) {
+      const savedPdfs = localStorage.getItem(`user_pdfs_${user.id}`)
+      const userPdfs = savedPdfs ? JSON.parse(savedPdfs) : []
+      
+      // Load progress from localStorage
+      const savedProgress = localStorage.getItem(`pdf_progress_${user.id}`)
+      const progressData = savedProgress ? JSON.parse(savedProgress) : {}
+      
+      // Merge default books with user uploads and apply saved progress
+      const allPdfs = [...defaultBooks.map(book => ({
+        ...book,
+        progress: progressData[book.id] || book.progress
+      })), ...userPdfs]
+      
+      setPdfs(allPdfs)
+    }
+  }, [user])
+
+  // Save user PDFs to localStorage whenever pdfs change
+  useEffect(() => {
+    if (user && pdfs.length > 0) {
+      const userPdfs = pdfs.filter(pdf => pdf.isUserUploaded)
+      localStorage.setItem(`user_pdfs_${user.id}`, JSON.stringify(userPdfs))
+      
+      // Save progress for all PDFs
+      const progressData: Record<string, number> = {}
+      pdfs.forEach(pdf => {
+        progressData[pdf.id] = pdf.progress
+      })
+      localStorage.setItem(`pdf_progress_${user.id}`, JSON.stringify(progressData))
+    }
+  }, [pdfs, user])
 
   if (isLoading || !user) {
     return (
@@ -184,23 +238,50 @@ export default function LibraryPage() {
 
     setIsUploading(true)
 
-    setTimeout(() => {
-      const newPdf: PDF = {
-        id: Date.now().toString(),
-        title: file.name.replace(".pdf", ""),
-        coverUrl: "/abstract-book-cover.png",
-        pageCount: Math.floor(Math.random() * 400) + 100,
-        uploadDate: new Date().toISOString().split("T")[0],
-        progress: 0,
-        isUserUploaded: true, // Kullanıcının yüklediği PDF
+    try {
+      // Convert PDF to base64 for local storage
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const fileData = event.target?.result as string
+        
+        const newPdf: PDF = {
+          id: Date.now().toString(),
+          title: file.name.replace(".pdf", ""),
+          coverUrl: "/abstract-book-cover.png",
+          pageCount: Math.floor(Math.random() * 400) + 100,
+          uploadDate: new Date().toISOString().split("T")[0],
+          progress: 0,
+          isUserUploaded: true,
+          fileData: fileData // Store base64 data
+        }
+        
+        setPdfs(prevPdfs => [newPdf, ...prevPdfs])
+        setIsUploading(false)
       }
-      setPdfs([newPdf, ...pdfs])
+      
+      reader.onerror = () => {
+        setIsUploading(false)
+        alert('PDF yüklenirken hata oluştu. Lütfen tekrar deneyin.')
+      }
+      
+      reader.readAsDataURL(file)
+    } catch (error) {
       setIsUploading(false)
-    }, 1500)
+      alert('PDF yüklenirken hata oluştu. Lütfen tekrar deneyin.')
+    }
   }
 
-  const handleDelete = (id: string) => {
-    setPdfs(pdfs.filter((pdf) => pdf.id !== id))
+  const handleDeleteClick = (id: string, title: string) => {
+    setDeleteDialog({ open: true, pdfId: id, pdfTitle: title })
+  }
+
+  const handleDeleteConfirm = () => {
+    setPdfs(prevPdfs => prevPdfs.filter((pdf) => pdf.id !== deleteDialog.pdfId))
+    setDeleteDialog({ open: false, pdfId: '', pdfTitle: '' })
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ open: false, pdfId: '', pdfTitle: '' })
   }
 
   const maxPdfs = user.plan === "premium" ? Number.POSITIVE_INFINITY : 2
@@ -377,9 +458,11 @@ export default function LibraryPage() {
                         Bionic
                       </Button>
                     </Link>
-                    <Button size="sm" variant="outline" onClick={() => handleDelete(pdf.id)} className="px-3 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {pdf.isUserUploaded && (
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteClick(pdf.id, pdf.title)} className="px-3 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
 
                   {/* Mobile Buttons */}
@@ -391,9 +474,11 @@ export default function LibraryPage() {
                           {t("library.rsvp_reading")}
                         </Button>
                       </Link>
-                      <Button size="sm" variant="outline" onClick={() => handleDelete(pdf.id)} className="px-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      {pdf.isUserUploaded && (
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteClick(pdf.id, pdf.title)} className="px-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
                     </div>
                     <Link href={`/read/bionic/${pdf.id}`} className="block">
                       <Button size="sm" variant="outline" className="w-full gap-1 bg-transparent text-xs">
@@ -414,6 +499,34 @@ export default function LibraryPage() {
           </div>
         )}
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open: boolean) => !open && handleDeleteCancel()}>
+        <AlertDialogContent className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-gray-900 dark:text-white text-xl font-bold">
+              {t("library.delete_pdf_title")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+              <span className="font-semibold text-gray-900 dark:text-white">"{deleteDialog.pdfTitle}"</span> {t("library.delete_pdf_description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 pt-4">
+            <AlertDialogCancel 
+              onClick={handleDeleteCancel}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-gray-300 font-medium"
+            >
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600 font-medium"
+            >
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

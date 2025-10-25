@@ -85,7 +85,9 @@
     "premium": "Premium",
     "account_settings": "Hesap Ayarları",
     "subscription": "Abonelik",
-    "my_account": "Hesabım"
+    "my_account": "Hesabım",
+    "delete_pdf_title": "PDF'i Sil",
+    "delete_pdf_description": "adlı PDF'i silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
   },
   "video": {
     "watch_demo": "Demoyu İzle",

@@ -7,6 +7,7 @@ export interface SubscriptionPlan {
   features: string[]
   pdfLimit: number | null // null means unlimited
   hasAIFeatures: boolean
+  googlePlayProductId?: string // Google Play Store product ID
 }
 
 // This is the source of truth for all subscription plans
@@ -37,6 +38,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     ],
     pdfLimit: null,
     hasAIFeatures: true,
+    googlePlayProductId: "fastreado_premium_monthly",
   },
 ]
 

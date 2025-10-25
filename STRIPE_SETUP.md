@@ -1,17 +1,57 @@
-# Stripe Entegrasyonu Kurulum Rehberi
+# Ödeme Sistemleri Kurulum Rehberi
 
-## 1. Stripe Hesabı Oluşturma
+## 🍋 Lemon Squeezy + 🏓 Paddle + ₿ Crypto Ödeme Entegrasyonu
 
-1. [Stripe Dashboard](https://dashboard.stripe.com/) adresine git
-2. Hesap oluştur veya giriş yap
-3. Test modunda çalışmaya başla
+## 1. Lemon Squeezy Kurulumu
 
-## 2. API Anahtarlarını Alma
+### Hesap Oluşturma
+1. [Lemon Squeezy](https://app.lemonsqueezy.com/) adresine git
+2. Hesap oluştur (bireysel hesap yeterli)
+3. Store oluştur
 
-1. Dashboard'da **Developers > API keys** bölümüne git
-2. **Test keys** sekmesinde:
-   - **Publishable key** (pk_test_...) kopyala
-   - **Secret key** (sk_test_...) kopyala
+### API Anahtarları
+1. **Settings > API** bölümüne git
+2. **API Key** oluştur ve kopyala
+3. **Store ID**'ni not al
+
+### Ürün Oluşturma
+1. **Products** bölümünde yeni ürün oluştur
+2. **Premium Plan** için:
+   - Name: "Fastreado Premium"
+   - Price: $2.99/month (recurring)
+3. **Variant ID**'yi not al
+
+## 2. Coinbase Commerce Kurulumu
+
+### Hesap Oluşturma
+1. [Coinbase Commerce](https://commerce.coinbase.com/) adresine git
+2. Hesap oluştur (bireysel hesap yeterli)
+3. Business bilgilerini doldur
+
+### API Anahtarları
+1. **Settings > API keys** bölümüne git
+2. **Create an API key** ile yeni anahtar oluştur
+3. API key'i güvenli yerde sakla
+
+## 3. Paddle Kurulumu
+
+### Hesap Oluşturma
+1. [Paddle](https://vendors.paddle.com/) adresine git
+2. Vendor hesabı oluştur (bireysel hesap yeterli)
+3. Hesap doğrulama işlemlerini tamamla
+
+### API Anahtarları
+1. **Developer Tools > Authentication** bölümüne git
+2. **Vendor ID** ve **API Key**'i not al
+3. **Public Key**'i webhook doğrulama için indir
+
+### Ürün Oluşturma
+1. **Catalog > Products** bölümünde yeni ürün oluştur
+2. **Premium Plan** için:
+   - Name: "Fastreado Premium"
+   - Type: "Subscription"
+   - Price: $2.99/month, ₺99/month
+3. **Product ID**'yi not al
 
 ## 3. Environment Variables Güncelleme
 

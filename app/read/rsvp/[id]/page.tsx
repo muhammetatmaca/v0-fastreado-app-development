@@ -3,214 +3,99 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Play, Pause, SkipBack, SkipForward, Settings, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { getBookContent, getBookInfo } from "@/lib/mock-books"
 
 export default function RSVPReaderPage() {
   const params = useParams()
-  const bookId = params.id as string
-  const [words, setWords] = useState<string[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [wpm, setWpm] = useState(300)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [bookInfo, setBookInfo] = useState<any>(null)
+  const pdfId = params.id as string
+  const [pdfTitle, setPdfTitle] = useState<string>("")
+  const [pdfData, setPdfData] = useState<string | null>(null)
 
   useEffect(() => {
-    // Get book info and content
-    const info = getBookInfo(bookId)
-    setBookInfo(info)
-    
-    if (info) {
-      const content = getBookContent(bookId, currentPage)
-      const wordArray = content.split(/\s+/)
-      setWords(wordArray)
-      setCurrentIndex(0)
-    }
-  }, [bookId, currentPage])
-
-  useEffect(() => {
-    if (!isPlaying || currentIndex >= words.length) return
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        if (prev >= words.length - 1) {
-          setIsPlaying(false)
-          return prev
+    // Get PDF from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (user.id) {
+      const savedPdfs = localStorage.getItem(`user_pdfs_${user.id}`)
+      if (savedPdfs) {
+        const localPdfs = JSON.parse(savedPdfs)
+        const localPdf = localPdfs.find((p: any) => p.id === pdfId)
+        if (localPdf) {
+          setPdfTitle(localPdf.title)
+          setPdfData(localPdf.fileData)
         }
-        return prev + 1
-      })
-    }, 60000 / wpm)
-
-    return () => clearInterval(interval)
-  }, [isPlaying, wpm, currentIndex, words.length])
-
-  const currentWord = words[currentIndex] || ""
-  const progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0
-
-  const getORP = (word: string) => {
-    const length = word.length
-    if (length === 1) return 0
-    if (length === 2) return 0
-    if (length === 3) return 1
-    // For longer words, ORP is roughly 1/3 from the start
-    return Math.floor(length / 3)
-  }
-
-  const orpIndex = getORP(currentWord)
-  const beforeORP = currentWord.slice(0, orpIndex)
-  const orpLetter = currentWord[orpIndex] || ""
-  const afterORP = currentWord.slice(orpIndex + 1)
-
-  const getDynamicFontSize = (wordLength: number) => {
-    // Base sizes for different breakpoints
-    if (wordLength <= 8) {
-      return "text-3xl md:text-5xl lg:text-6xl" // Normal size
-    } else if (wordLength <= 12) {
-      return "text-2xl md:text-4xl lg:text-5xl" // Slightly smaller
-    } else if (wordLength <= 16) {
-      return "text-xl md:text-3xl lg:text-4xl" // Smaller
-    } else {
-      return "text-lg md:text-2xl lg:text-3xl" // Very small for very long words
+      }
     }
-  }
+  }, [pdfId])
 
-  const fontSizeClass = getDynamicFontSize(currentWord.length)
+  if (!pdfData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">📄</div>
+          <h2 className="text-xl font-semibold mb-2">PDF Bulunamadı</h2>
+          <p className="text-muted-foreground mb-6">
+            Bu PDF bu cihazda mevcut değil. Lütfen kütüphaneden tekrar yükleyin.
+          </p>
+          <Link href="/library">
+            <Button>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Kütüphaneye Dön
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/library">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Kütüphane</span>
-              </Button>
-            </Link>
-            <div className="text-sm text-muted-foreground">
-              {bookInfo ? `${bookInfo.title} - ${bookInfo.author}` : 'RSVP Okuyucu'}
+            <div className="flex items-center gap-4">
+              <Link href="/library">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Kütüphane
+                </Button>
+              </Link>
+              <div>
+                <h1 className="font-semibold truncate max-w-md">{pdfTitle}</h1>
+                <p className="text-sm text-muted-foreground">RSVP Okuma</p>
+              </div>
             </div>
-            <Button variant="ghost" size="sm">
-              <Settings className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Reading Area */}
-      <main className="flex-1 flex items-center justify-center p-2 sm:p-4">
-        <div className="w-full max-w-4xl">
-          <Card className="p-8 md:p-16 mb-8 min-h-[250px] md:min-h-[300px] flex items-center justify-center bg-card/50">
-            <div className="text-center w-full overflow-hidden">
-              <div className="font-mono flex items-center justify-center gap-0">
-                <span className={`${fontSizeClass} font-bold text-foreground text-right`} style={{ minWidth: "0" }}>
-                  {beforeORP}
-                </span>
-                <span className={`${fontSizeClass} text-red-500 font-extrabold`}>{orpLetter}</span>
-                <span className={`${fontSizeClass} font-bold text-foreground text-left`} style={{ minWidth: "0" }}>
-                  {afterORP}
-                </span>
+      <main className="container mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-card rounded-lg border p-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-4">RSVP Okuma Modu</h2>
+              <p className="text-muted-foreground mb-6">
+                PDF başarıyla yüklendi. RSVP okuma deneyimi yakında eklenecek.
+              </p>
+              
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <p className="text-sm text-muted-foreground">
+                  PDF: {pdfTitle}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Dosya boyutu: {Math.round(pdfData.length / 1024)} KB
+                </p>
               </div>
-              <div className="text-sm text-muted-foreground mt-4">
-                {currentIndex + 1} / {words.length} kelime • Sayfa {currentPage + 1}
+              
+              <div className="mt-6">
+                <Link href="/library">
+                  <Button variant="outline">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Kütüphaneye Dön
+                  </Button>
+                </Link>
               </div>
             </div>
-          </Card>
-
-          {/* Progress Bar */}
-          <div className="mb-4 sm:mb-6">
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Playback Controls */}
-            <div className="flex items-center justify-center gap-2 sm:gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 sm:h-12 sm:w-12 bg-transparent"
-                onClick={() => setCurrentIndex(Math.max(0, currentIndex - 10))}
-              >
-                <SkipBack className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-
-              <Button
-                size="lg"
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5 sm:w-6 sm:h-6" />
-                ) : (
-                  <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-1" />
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 sm:h-12 sm:w-12 bg-transparent"
-                onClick={() => setCurrentIndex(Math.min(words.length - 1, currentIndex + 10))}
-              >
-                <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            </div>
-
-            {/* Page Navigation */}
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (currentPage > 0) {
-                    setCurrentPage(currentPage - 1)
-                    setIsPlaying(false)
-                  }
-                }}
-                disabled={currentPage === 0}
-              >
-                Önceki Sayfa
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (bookInfo && currentPage < bookInfo.content.length - 1) {
-                    setCurrentPage(currentPage + 1)
-                    setIsPlaying(false)
-                  }
-                }}
-                disabled={!bookInfo || currentPage >= bookInfo.content.length - 1}
-              >
-                Sonraki Sayfa
-              </Button>
-            </div>
-
-            {/* Speed Control */}
-            <Card className="p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs sm:text-sm font-medium">Okuma Hızı</span>
-                <span className="text-xl sm:text-2xl font-bold text-primary">{wpm} WPM</span>
-              </div>
-              <Slider
-                value={[wpm]}
-                onValueChange={(value) => setWpm(value[0])}
-                min={100}
-                max={1000}
-                step={50}
-                className="mb-2"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Yavaş</span>
-                <span>Hızlı</span>
-              </div>
-            </Card>
           </div>
         </div>
       </main>

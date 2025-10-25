@@ -84,7 +84,9 @@
     "premium": "Premium",
     "account_settings": "Account Settings",
     "subscription": "Subscription",
-    "my_account": "My Account"
+    "my_account": "My Account",
+    "delete_pdf_title": "Delete PDF",
+    "delete_pdf_description": "Are you sure you want to delete this PDF? This action cannot be undone."
   },
   "video": {
     "watch_demo": "Watch Demo",
