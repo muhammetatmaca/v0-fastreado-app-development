@@ -1,21 +1,21 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import crypto from "crypto"
-import { handleCoinbaseWebhook } from "@/app/actions/coinbase"
+import { handleFreemiusWebhook } from "@/app/actions/freemius"
 
 export async function POST(req: Request) {
   const body = await req.text()
   const headersList = await headers()
-  const signature = headersList.get("X-CC-Webhook-Signature") as string
+  const signature = headersList.get("X-FS-Signature") as string
 
-  // Webhook signature doğrulama
+  // Freemius webhook signature doğrulama
   const expectedSignature = crypto
-    .createHmac("sha256", process.env.COINBASE_COMMERCE_WEBHOOK_SECRET!)
+    .createHmac("sha256", process.env.FREEMIUS_WEBHOOK_SECRET!)
     .update(body)
     .digest("hex")
 
   if (signature !== expectedSignature) {
-    console.error("Invalid Coinbase Commerce webhook signature")
+    console.error("Invalid Freemius webhook signature")
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
@@ -23,17 +23,17 @@ export async function POST(req: Request) {
   try {
     event = JSON.parse(body)
   } catch (error) {
-    console.error("Invalid JSON in webhook body")
+    console.error("Invalid JSON in Freemius webhook body")
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  console.log(`Received Coinbase Commerce event: ${event.type}`)
+  console.log(`Received Freemius event: ${event.type}`)
 
   try {
-    const result = await handleCoinbaseWebhook(event)
+    const result = await handleFreemiusWebhook(event)
     
     if (!result.success) {
-      console.error("Webhook processing failed:", result.error)
+      console.error("Freemius webhook processing failed:", result.error)
       return NextResponse.json(
         { error: "Webhook processing failed" },
         { status: 500 }
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error(`Error processing Coinbase Commerce webhook:`, error)
+    console.error(`Error processing Freemius webhook:`, error)
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }

@@ -411,11 +411,74 @@ function FreemiusCheckout({ planId }: { planId: string }) {
   const { language } = useTranslation()
   const plan = getPlanById(planId)!
   const planPrice = getPlanPrice(plan, language)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const router = useRouter()
 
-  const handleFreemiusCheckout = () => {
-    // Freemius checkout URL'i
-    const checkoutUrl = `https://checkout.freemius.com/mode/dialog/plugin/fastreado/plan/${planId}/`
-    window.open(checkoutUrl, '_blank', 'width=800,height=600')
+  const handleFreemiusCheckout = async () => {
+    setIsProcessing(true)
+    
+    try {
+      // Get user info from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      
+      if (!user.id || !user.email) {
+        throw new Error('User information not found')
+      }
+      
+      // Import Freemius function dynamically
+      const { createFreemiusCheckout } = await import('@/app/actions/freemius')
+      
+      // Create checkout session
+      const result = await createFreemiusCheckout(planId, user.id, user.email, language)
+      
+      if (result.success && result.checkoutUrl) {
+        // Open checkout in new window
+        window.open(result.checkoutUrl, '_blank', 'width=800,height=600')
+        
+        // Show success message after a delay
+        setTimeout(() => {
+          setIsSuccess(true)
+          setTimeout(() => {
+            router.push('/library?upgraded=true')
+          }, 2000)
+        }, 3000)
+      } else {
+        throw new Error(result.error || 'Failed to create checkout')
+      }
+      
+    } catch (error) {
+      console.error('Freemius checkout error:', error)
+      alert(language === 'tr' 
+        ? 'Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.'
+        : 'Failed to create checkout. Please try again.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="p-8 text-center">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold mb-2">
+          {language === 'tr' ? 'Ödeme Başlatıldı!' : 'Payment Initiated!'}
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          {language === 'tr' 
+            ? `Freemius ödeme sayfasına yönlendirildiniz. ${plan.name} planına yükseltme işleminizi tamamlayın.`
+            : `Redirected to Freemius payment page. Complete your upgrade to ${plan.name} plan.`
+          }
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {language === 'tr' 
+            ? 'Kütüphane sayfasına yönlendiriliyorsunuz...'
+            : 'Redirecting to library...'
+          }
+        </p>
+      </Card>
+    )
   }
 
   return (
@@ -441,17 +504,64 @@ function FreemiusCheckout({ planId }: { planId: string }) {
         </div>
       </div>
 
-      <Button onClick={handleFreemiusCheckout} className="w-full" size="lg">
-        <Lock className="w-4 h-4 mr-2" />
-        {language === 'tr' ? 'Freemius ile Öde' : 'Pay with Freemius'}
+      <div className="grid grid-cols-2 gap-2 mb-6">
+        <div className="bg-blue-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">💳</div>
+          <div className="text-xs">{language === 'tr' ? 'Kredi Kartı' : 'Credit Card'}</div>
+        </div>
+        <div className="bg-green-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">🏦</div>
+          <div className="text-xs">PayPal</div>
+        </div>
+      </div>
+
+      <div className="bg-green-50 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="text-2xl">🚀</span>
+          <span className="font-semibold text-green-700">Freemius</span>
+        </div>
+        <p className="text-sm text-green-600">
+          {language === 'tr' 
+            ? 'SaaS ürünleri için özel olarak tasarlanmış güvenli ödeme sistemi'
+            : 'Secure payment system designed specifically for SaaS products'
+          }
+        </p>
+      </div>
+
+      <Button 
+        onClick={handleFreemiusCheckout} 
+        className="w-full" 
+        size="lg"
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+            {language === 'tr' ? 'Hazırlanıyor...' : 'Preparing...'}
+          </>
+        ) : (
+          <>
+            <Lock className="w-4 h-4 mr-2" />
+            {language === 'tr' ? 'Freemius ile Öde' : 'Pay with Freemius'}
+          </>
+        )}
       </Button>
 
       <p className="text-xs text-muted-foreground mt-4">
         {language === 'tr' 
-          ? 'SaaS abonelik yönetimi • Otomatik faturalandırma'
-          : 'SaaS subscription management • Automatic billing'
+          ? 'SaaS abonelik yönetimi • Otomatik faturalandırma • Güvenli ödeme'
+          : 'SaaS subscription management • Automatic billing • Secure payment'
         }
       </p>
+      
+      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-xs text-blue-700">
+          {language === 'tr' 
+            ? '💡 Freemius, WordPress ve SaaS ürünleri için optimize edilmiş ödeme sistemidir'
+            : '💡 Freemius is a payment system optimized for WordPress and SaaS products'
+          }
+        </p>
+      </div>
     </Card>
   )
 }
@@ -704,19 +814,78 @@ function CryptoCheckout({ planId }: { planId: string }) {
   const plan = getPlanById(planId)!
   const planPrice = getPlanPrice(plan, language)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const router = useRouter()
 
   const handleCryptoPayment = async () => {
     setIsProcessing(true)
     
-    // Coinbase Commerce entegrasyonu burada olacak
-    // Şimdilik demo
-    setTimeout(() => {
-      alert(language === 'tr' 
-        ? 'Kripto ödeme sistemi yakında aktif olacak!' 
-        : 'Crypto payment system coming soon!'
+    try {
+      // Get user info from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      
+      if (!user.id || !user.email) {
+        throw new Error('User information not found')
+      }
+      
+      // Import Coinbase function dynamically
+      const { createCoinbaseCharge } = await import('@/app/actions/coinbase')
+      
+      // Create Coinbase charge
+      const result = await createCoinbaseCharge(
+        user.id,
+        plan.name,
+        planPrice.price,
+        'USD'
       )
+      
+      if (result.success && result.data) {
+        // Open Coinbase Commerce checkout in new window
+        window.open(result.data.hosted_url, '_blank', 'width=800,height=600')
+        
+        // Show success message after a delay
+        setTimeout(() => {
+          setIsSuccess(true)
+          setTimeout(() => {
+            router.push('/library?upgraded=true')
+          }, 2000)
+        }, 3000)
+      } else {
+        throw new Error(result.error || 'Failed to create crypto payment')
+      }
+      
+    } catch (error) {
+      console.error('Crypto payment error:', error)
+      alert(language === 'tr' 
+        ? 'Kripto ödeme oluşturulamadı. Lütfen tekrar deneyin.'
+        : 'Failed to create crypto payment. Please try again.'
+      )
+    } finally {
       setIsProcessing(false)
-    }, 2000)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="p-8 text-center">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold mb-2">
+          {language === 'tr' ? 'Ödeme Başlatıldı!' : 'Payment Initiated!'}
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          {language === 'tr' 
+            ? 'Kripto ödemeniz başarıyla oluşturuldu. Coinbase Commerce sayfasında ödemeyi tamamlayın.'
+            : 'Your crypto payment was successfully created. Complete the payment on Coinbase Commerce page.'
+          }
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {language === 'tr' 
+            ? 'Kütüphane sayfasına yönlendiriliyorsunuz...'
+            : 'Redirecting to library...'
+          }
+        </p>
+      </Card>
+    )
   }
 
   return (
@@ -729,8 +898,8 @@ function CryptoCheckout({ planId }: { planId: string }) {
       </h3>
       <p className="text-muted-foreground mb-6">
         {language === 'tr' 
-          ? 'Bitcoin, Ethereum veya USDC ile ödeme yapın'
-          : 'Pay with Bitcoin, Ethereum or USDC'
+          ? 'Bitcoin, Ethereum, USDC ve diğer kripto paralar ile ödeme yapın'
+          : 'Pay with Bitcoin, Ethereum, USDC and other cryptocurrencies'
         }
       </p>
       
@@ -738,7 +907,7 @@ function CryptoCheckout({ planId }: { planId: string }) {
         <div className="flex justify-between items-center mb-2">
           <span>{plan.name}</span>
           <span className="font-semibold">
-            {planPrice.symbol}{planPrice.price.toFixed(2)} ≈ $2.99
+            ${planPrice.price.toFixed(2)}
           </span>
         </div>
         <div className="text-sm text-muted-foreground">
@@ -761,6 +930,19 @@ function CryptoCheckout({ planId }: { planId: string }) {
         </div>
       </div>
 
+      <div className="bg-blue-50 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="text-2xl">🔒</span>
+          <span className="font-semibold text-blue-700">Coinbase Commerce</span>
+        </div>
+        <p className="text-sm text-blue-600">
+          {language === 'tr' 
+            ? 'Güvenli kripto ödeme işlemi için Coinbase Commerce kullanıyoruz'
+            : 'We use Coinbase Commerce for secure crypto payments'
+          }
+        </p>
+      </div>
+
       <Button 
         onClick={handleCryptoPayment} 
         className="w-full" 
@@ -770,7 +952,7 @@ function CryptoCheckout({ planId }: { planId: string }) {
         {isProcessing ? (
           <>
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-            {language === 'tr' ? 'Hazırlanıyor...' : 'Preparing...'}
+            {language === 'tr' ? 'Ödeme oluşturuluyor...' : 'Creating payment...'}
           </>
         ) : (
           <>
@@ -782,10 +964,19 @@ function CryptoCheckout({ planId }: { planId: string }) {
 
       <p className="text-xs text-muted-foreground mt-4">
         {language === 'tr' 
-          ? 'Güvenli blockchain ödemesi • Düşük işlem ücreti'
-          : 'Secure blockchain payment • Low transaction fees'
+          ? 'Güvenli blockchain ödemesi • Düşük işlem ücreti • Anında onay'
+          : 'Secure blockchain payment • Low transaction fees • Instant confirmation'
         }
       </p>
+      
+      <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
+        <p className="text-xs text-yellow-700">
+          {language === 'tr' 
+            ? '💡 Ödeme tamamlandıktan sonra hesabınız otomatik olarak premium\'a yükseltilecektir'
+            : '💡 Your account will be automatically upgraded to premium after payment completion'
+          }
+        </p>
+      </div>
     </Card>
   )
 }
