@@ -53,6 +53,8 @@ export default function PrivacyPage() {
                   <li>Yüklediğiniz PDF dosyaları</li>
                   <li>Okuma istatistikleri ve tercihleri</li>
                   <li>Cihaz ve tarayıcı bilgileri</li>
+                  <li>Ödeme bilgileri (ödeme sağlayıcıları aracılığıyla)</li>
+                  <li>Abonelik durumu ve fatura bilgileri</li>
                 </ul>
               </section>
 
@@ -71,9 +73,32 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold mb-4 font-fragor">3. Bilgi Paylaşımı</h2>
-                <p className="text-muted-foreground">
-                  Kişisel bilgilerinizi üçüncü taraflarla paylaşmayız. Sadece yasal zorunluluklar 
-                  veya güvenlik tehditleri durumunda gerekli bilgileri yetkili makamlarla paylaşabiliriz.
+                <p className="text-muted-foreground mb-4">
+                  Kişisel bilgilerinizi üçüncü taraflarla paylaşmayız. Aşağıdaki durumlar istisnadır:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Yasal zorunluluklar veya güvenlik tehditleri</li>
+                  <li>Ödeme işlemleri için güvenilir ödeme sağlayıcıları (Stripe, Lemon Squeezy, vb.)</li>
+                  <li>Hizmet sağlayıcıları (hosting, e-posta servisleri)</li>
+                  <li>Açık rızanızla paylaşım</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">3.1. Ödeme Sağlayıcıları</h2>
+                <p className="text-muted-foreground mb-4">
+                  Ödeme işlemleri için aşağıdaki güvenilir sağlayıcıları kullanıyoruz:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li><strong>Stripe:</strong> PCI DSS Level 1 sertifikalı</li>
+                  <li><strong>Lemon Squeezy:</strong> Avrupa merkezli ödeme sistemi</li>
+                  <li><strong>Coinbase Commerce:</strong> Kripto para ödemeleri</li>
+                  <li><strong>Polar.sh:</strong> GitHub entegrasyonlu ödemeler</li>
+                  <li><strong>Freemius:</strong> SaaS odaklı ödeme sistemi</li>
+                </ul>
+                <p className="text-muted-foreground mt-4">
+                  Bu sağlayıcılar kendi gizlilik politikalarına tabidir ve ödeme bilgilerinizi 
+                  bizimle paylaşmazlar. Sadece işlem durumu bilgilerini alırız.
                 </p>
               </section>
 
@@ -118,6 +143,8 @@ export default function PrivacyPage() {
                   <li>PDF files you upload</li>
                   <li>Reading statistics and preferences</li>
                   <li>Device and browser information</li>
+                  <li>Payment information (through payment providers)</li>
+                  <li>Subscription status and billing information</li>
                 </ul>
               </section>
 
@@ -136,9 +163,32 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-semibold mb-4 font-fragor">3. Information Sharing</h2>
-                <p className="text-muted-foreground">
-                  We do not share your personal information with third parties. We may only share 
-                  necessary information with authorities in case of legal obligations or security threats.
+                <p className="text-muted-foreground mb-4">
+                  We do not share your personal information with third parties. The following are exceptions:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li>Legal obligations or security threats</li>
+                  <li>Trusted payment providers for payment processing (Stripe, Lemon Squeezy, etc.)</li>
+                  <li>Service providers (hosting, email services)</li>
+                  <li>Sharing with your explicit consent</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">3.1. Payment Providers</h2>
+                <p className="text-muted-foreground mb-4">
+                  We use the following trusted providers for payment processing:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li><strong>Stripe:</strong> PCI DSS Level 1 certified</li>
+                  <li><strong>Lemon Squeezy:</strong> Europe-based payment system</li>
+                  <li><strong>Coinbase Commerce:</strong> Cryptocurrency payments</li>
+                  <li><strong>Polar.sh:</strong> GitHub-integrated payments</li>
+                  <li><strong>Freemius:</strong> SaaS-focused payment system</li>
+                </ul>
+                <p className="text-muted-foreground mt-4">
+                  These providers are subject to their own privacy policies and do not share 
+                  your payment information with us. We only receive transaction status information.
                 </p>
               </section>
 

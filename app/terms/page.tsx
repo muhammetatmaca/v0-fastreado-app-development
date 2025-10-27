@@ -99,8 +99,26 @@ export default function TermsPage() {
                   <li>Ödemeler aylık olarak tahsil edilir</li>
                   <li>İstediğiniz zaman aboneliğinizi iptal edebilirsiniz</li>
                   <li>İptal sonrası mevcut dönem sonuna kadar hizmet devam eder</li>
-                  <li>İade politikamız için iletişime geçin</li>
+                  <li>İade politikamız için <Link href="/refund" className="text-primary hover:underline">İade Politikası</Link> sayfasını inceleyin</li>
                 </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">5.1. Ödeme Sağlayıcıları</h2>
+                <p className="text-muted-foreground mb-4">
+                  FastReado, güvenli ödeme işlemleri için aşağıdaki sağlayıcıları kullanır:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li><strong>Stripe:</strong> Kredi kartı ve dijital cüzdan ödemeleri</li>
+                  <li><strong>Lemon Squeezy:</strong> Global ödeme çözümleri</li>
+                  <li><strong>Coinbase Commerce:</strong> Kripto para ödemeleri</li>
+                  <li><strong>Polar.sh:</strong> GitHub entegrasyonlu ödemeler</li>
+                  <li><strong>Freemius:</strong> SaaS odaklı ödeme sistemi</li>
+                </ul>
+                <p className="text-muted-foreground mt-4">
+                  Her ödeme sağlayıcısının kendi gizlilik politikası ve kullanım şartları geçerlidir. 
+                  Ödeme yaparken ilgili sağlayıcının şartlarını da kabul etmiş sayılırsınız.
+                </p>
               </section>
 
               <section>
@@ -185,8 +203,26 @@ export default function TermsPage() {
                   <li>Payments are charged monthly</li>
                   <li>You can cancel your subscription at any time</li>
                   <li>Service continues until the end of current period after cancellation</li>
-                  <li>Contact us for refund policy</li>
+                  <li>See our <Link href="/refund" className="text-primary hover:underline">Refund Policy</Link> for refund information</li>
                 </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold mb-4 font-fragor">5.1. Payment Providers</h2>
+                <p className="text-muted-foreground mb-4">
+                  FastReado uses the following providers for secure payment processing:
+                </p>
+                <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                  <li><strong>Stripe:</strong> Credit card and digital wallet payments</li>
+                  <li><strong>Lemon Squeezy:</strong> Global payment solutions</li>
+                  <li><strong>Coinbase Commerce:</strong> Cryptocurrency payments</li>
+                  <li><strong>Polar.sh:</strong> GitHub-integrated payments</li>
+                  <li><strong>Freemius:</strong> SaaS-focused payment system</li>
+                </ul>
+                <p className="text-muted-foreground mt-4">
+                  Each payment provider has its own privacy policy and terms of service. 
+                  By making a payment, you also agree to the relevant provider's terms.
+                </p>
               </section>
 
               <section>

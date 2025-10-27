@@ -285,6 +285,11 @@ export default function HomePage() {
                     Kullanım Şartları
                   </Link>
                 </li>
+                <li>
+                  <Link href="/refund" className="hover:text-foreground transition-colors">
+                    İade Politikası
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>

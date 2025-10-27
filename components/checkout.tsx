@@ -12,7 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation"
 // Lemon Squeezy ve Crypto ödeme entegrasyonu için
 
 export default function Checkout({ planId }: { planId: string }) {
-  const [paymentMethod, setPaymentMethod] = useState<'lemon' | 'paddle' | 'freemius' | 'polar' | 'revenuecat' | 'crypto' | 'googleplay' | 'demo'>('lemon')
+  const [paymentMethod, setPaymentMethod] = useState<'lemon' | 'stripe' | 'paddle' | 'freemius' | 'polar' | 'revenuecat' | 'crypto' | 'googleplay' | 'demo'>('lemon')
   const { language } = useTranslation()
   const plan = getPlanById(planId)
   const router = useRouter()
@@ -49,6 +49,23 @@ export default function Checkout({ planId }: { planId: string }) {
             <h4 className="font-semibold mb-1">Lemon Squeezy</h4>
             <p className="text-sm text-muted-foreground">
               {language === 'tr' ? 'Kredi kartı, PayPal' : 'Credit card, PayPal'}
+            </p>
+          </div>
+        </Card>
+
+        <Card 
+          className={`p-4 cursor-pointer border-2 transition-colors ${
+            paymentMethod === 'stripe' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+          }`}
+          onClick={() => setPaymentMethod('stripe')}
+        >
+          <div className="text-center">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">💳</span>
+            </div>
+            <h4 className="font-semibold mb-1">Stripe</h4>
+            <p className="text-sm text-muted-foreground">
+              {language === 'tr' ? 'Kredi kartı, Apple Pay' : 'Credit card, Apple Pay'}
             </p>
           </div>
         </Card>
@@ -177,6 +194,7 @@ export default function Checkout({ planId }: { planId: string }) {
 
       {/* Payment Component */}
       {paymentMethod === 'lemon' && <LemonSqueezyCheckout planId={planId} />}
+      {paymentMethod === 'stripe' && <StripeCheckout planId={planId} />}
       {paymentMethod === 'paddle' && <PaddleCheckout planId={planId} />}
       {paymentMethod === 'freemius' && <FreemiusCheckout planId={planId} />}
       {paymentMethod === 'polar' && <PolarCheckout planId={planId} />}
@@ -311,6 +329,164 @@ function LemonSqueezyCheckout({ planId }: { planId: string }) {
           : 'Credit card, PayPal and other payment methods accepted'
         }
       </p>
+    </Card>
+  )
+}
+
+// Stripe Checkout Component
+function StripeCheckout({ planId }: { planId: string }) {
+  const { language } = useTranslation()
+  const plan = getPlanById(planId)!
+  const planPrice = getPlanPrice(plan, language)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const router = useRouter()
+
+  const handleStripeCheckout = async () => {
+    setIsProcessing(true)
+    
+    try {
+      // Import Stripe function dynamically
+      const { startCheckoutSession } = await import('@/app/actions/stripe')
+      
+      // Create checkout session
+      const clientSecret = await startCheckoutSession(planId)
+      
+      if (clientSecret) {
+        // Stripe Checkout sayfasına yönlendir
+        const checkoutUrl = `https://checkout.stripe.com/c/pay/${clientSecret.split('_secret_')[0]}`
+        window.open(checkoutUrl, '_blank', 'width=800,height=600')
+        
+        // Show success message after a delay
+        setTimeout(() => {
+          setIsSuccess(true)
+          setTimeout(() => {
+            router.push('/library?upgraded=true')
+          }, 2000)
+        }, 3000)
+      } else {
+        throw new Error('Failed to create checkout session')
+      }
+      
+    } catch (error) {
+      console.error('Stripe checkout error:', error)
+      alert(language === 'tr' 
+        ? 'Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.'
+        : 'Failed to create checkout. Please try again.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="p-8 text-center">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold mb-2">
+          {language === 'tr' ? 'Ödeme Başlatıldı!' : 'Payment Initiated!'}
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          {language === 'tr' 
+            ? `Stripe ödeme sayfasına yönlendirildiniz. ${plan.name} planına yükseltme işleminizi tamamlayın.`
+            : `Redirected to Stripe payment page. Complete your upgrade to ${plan.name} plan.`
+          }
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {language === 'tr' 
+            ? 'Kütüphane sayfasına yönlendiriliyorsunuz...'
+            : 'Redirecting to library...'
+          }
+        </p>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="p-8 text-center">
+      <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+        <span className="text-3xl">💳</span>
+      </div>
+      <h3 className="text-xl font-semibold mb-2">Stripe</h3>
+      <p className="text-muted-foreground mb-6">
+        {language === 'tr' 
+          ? 'Dünyanın en güvenilir ödeme sistemi'
+          : 'World\'s most trusted payment system'
+        }
+      </p>
+      
+      <div className="bg-muted/50 rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <span>{plan.name}</span>
+          <span className="font-semibold">{planPrice.symbol}{planPrice.price.toFixed(2)}</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {language === 'tr' ? 'Aylık abonelik' : 'Monthly subscription'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mb-6">
+        <div className="bg-blue-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">💳</div>
+          <div className="text-xs">{language === 'tr' ? 'Kredi Kartı' : 'Credit Card'}</div>
+        </div>
+        <div className="bg-green-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">🍎</div>
+          <div className="text-xs">Apple Pay</div>
+        </div>
+        <div className="bg-orange-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">🤖</div>
+          <div className="text-xs">Google Pay</div>
+        </div>
+      </div>
+
+      <div className="bg-purple-50 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="text-2xl">🔒</span>
+          <span className="font-semibold text-purple-700">Stripe</span>
+        </div>
+        <p className="text-sm text-purple-600">
+          {language === 'tr' 
+            ? 'Milyonlarca işletme tarafından güvenilen ödeme altyapısı'
+            : 'Payment infrastructure trusted by millions of businesses'
+          }
+        </p>
+      </div>
+
+      <Button 
+        onClick={handleStripeCheckout} 
+        className="w-full" 
+        size="lg"
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+            {language === 'tr' ? 'Hazırlanıyor...' : 'Preparing...'}
+          </>
+        ) : (
+          <>
+            <Lock className="w-4 h-4 mr-2" />
+            {language === 'tr' ? 'Stripe ile Öde' : 'Pay with Stripe'}
+          </>
+        )}
+      </Button>
+
+      <p className="text-xs text-muted-foreground mt-4">
+        {language === 'tr' 
+          ? 'PCI DSS Level 1 sertifikalı • 256-bit SSL şifreleme • Dünya çapında kabul'
+          : 'PCI DSS Level 1 certified • 256-bit SSL encryption • Accepted worldwide'
+        }
+      </p>
+      
+      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-xs text-blue-700">
+          {language === 'tr' 
+            ? '💡 Stripe, en düşük komisyon oranları ile güvenli ödeme sunar (%2.9 + $0.30)'
+            : '💡 Stripe offers secure payments with the lowest commission rates (2.9% + $0.30)'
+          }
+        </p>
+      </div>
     </Card>
   )
 }
@@ -571,11 +747,74 @@ function PolarCheckout({ planId }: { planId: string }) {
   const { language } = useTranslation()
   const plan = getPlanById(planId)!
   const planPrice = getPlanPrice(plan, language)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const router = useRouter()
 
-  const handlePolarCheckout = () => {
-    // Polar.sh checkout URL'i
-    const checkoutUrl = `https://polar.sh/fastreado/subscriptions/${planId}`
-    window.open(checkoutUrl, '_blank', 'width=800,height=600')
+  const handlePolarCheckout = async () => {
+    setIsProcessing(true)
+    
+    try {
+      // Get user info from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      
+      if (!user.id || !user.email) {
+        throw new Error('User information not found')
+      }
+      
+      // Import Polar function dynamically
+      const { createPolarCheckout } = await import('@/app/actions/polar')
+      
+      // Create checkout session
+      const result = await createPolarCheckout(planId, user.id, user.email, language)
+      
+      if (result.success && result.checkoutUrl) {
+        // Open checkout in new window
+        window.open(result.checkoutUrl, '_blank', 'width=800,height=600')
+        
+        // Show success message after a delay
+        setTimeout(() => {
+          setIsSuccess(true)
+          setTimeout(() => {
+            router.push('/library?upgraded=true')
+          }, 2000)
+        }, 3000)
+      } else {
+        throw new Error(result.error || 'Failed to create checkout')
+      }
+      
+    } catch (error) {
+      console.error('Polar checkout error:', error)
+      alert(language === 'tr' 
+        ? 'Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.'
+        : 'Failed to create checkout. Please try again.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="p-8 text-center">
+        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold mb-2">
+          {language === 'tr' ? 'Ödeme Başlatıldı!' : 'Payment Initiated!'}
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          {language === 'tr' 
+            ? `Polar.sh ödeme sayfasına yönlendirildiniz. ${plan.name} planına yükseltme işleminizi tamamlayın.`
+            : `Redirected to Polar.sh payment page. Complete your upgrade to ${plan.name} plan.`
+          }
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {language === 'tr' 
+            ? 'Kütüphane sayfasına yönlendiriliyorsunuz...'
+            : 'Redirecting to library...'
+          }
+        </p>
+      </Card>
+    )
   }
 
   return (
@@ -586,8 +825,8 @@ function PolarCheckout({ planId }: { planId: string }) {
       <h3 className="text-xl font-semibold mb-2">Polar.sh</h3>
       <p className="text-muted-foreground mb-6">
         {language === 'tr' 
-          ? 'Geliştiriciler için modern ödeme sistemi'
-          : 'Modern payment system for developers'
+          ? 'Açık kaynak geliştiriciler için modern ödeme sistemi'
+          : 'Modern payment system for open source developers'
         }
       </p>
       
@@ -601,17 +840,64 @@ function PolarCheckout({ planId }: { planId: string }) {
         </div>
       </div>
 
-      <Button onClick={handlePolarCheckout} className="w-full" size="lg">
-        <Lock className="w-4 h-4 mr-2" />
-        {language === 'tr' ? 'Polar ile Öde' : 'Pay with Polar'}
+      <div className="grid grid-cols-2 gap-2 mb-6">
+        <div className="bg-blue-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">💳</div>
+          <div className="text-xs">{language === 'tr' ? 'Kredi Kartı' : 'Credit Card'}</div>
+        </div>
+        <div className="bg-purple-50 p-3 rounded-lg text-center">
+          <div className="text-lg mb-1">🐙</div>
+          <div className="text-xs">GitHub</div>
+        </div>
+      </div>
+
+      <div className="bg-cyan-50 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="text-2xl">🐻‍❄️</span>
+          <span className="font-semibold text-cyan-700">Polar.sh</span>
+        </div>
+        <p className="text-sm text-cyan-600">
+          {language === 'tr' 
+            ? 'GitHub entegrasyonu ile açık kaynak projeleri için özel tasarlanmış ödeme sistemi'
+            : 'Payment system designed specifically for open source projects with GitHub integration'
+          }
+        </p>
+      </div>
+
+      <Button 
+        onClick={handlePolarCheckout} 
+        className="w-full" 
+        size="lg"
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+            {language === 'tr' ? 'Hazırlanıyor...' : 'Preparing...'}
+          </>
+        ) : (
+          <>
+            <Lock className="w-4 h-4 mr-2" />
+            {language === 'tr' ? 'Polar ile Öde' : 'Pay with Polar'}
+          </>
+        )}
       </Button>
 
       <p className="text-xs text-muted-foreground mt-4">
         {language === 'tr' 
-          ? 'GitHub entegrasyonu • Developer friendly'
-          : 'GitHub integration • Developer friendly'
+          ? 'GitHub entegrasyonu • Developer friendly • Açık kaynak odaklı'
+          : 'GitHub integration • Developer friendly • Open source focused'
         }
       </p>
+      
+      <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+        <p className="text-xs text-purple-700">
+          {language === 'tr' 
+            ? '💡 Polar.sh, GitHub sponsorları ve açık kaynak projeleri için optimize edilmiştir'
+            : '💡 Polar.sh is optimized for GitHub sponsors and open source projects'
+          }
+        </p>
+      </div>
     </Card>
   )
 }
