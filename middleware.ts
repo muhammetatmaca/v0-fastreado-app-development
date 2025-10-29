@@ -14,7 +14,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // Just check if token exists, let the client-side handle user data fetching
-    // We can't use JWT verification in edge runtime due to crypto module limitations
     return NextResponse.next()
   }
 

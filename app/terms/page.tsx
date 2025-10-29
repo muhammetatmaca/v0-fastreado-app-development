@@ -109,10 +109,7 @@ export default function TermsPage() {
                   FastReado, güvenli ödeme işlemleri için aşağıdaki sağlayıcıları kullanır:
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                  <li><strong>Stripe:</strong> Kredi kartı ve dijital cüzdan ödemeleri</li>
                   <li><strong>Lemon Squeezy:</strong> Global ödeme çözümleri</li>
-                  <li><strong>Coinbase Commerce:</strong> Kripto para ödemeleri</li>
-                  <li><strong>Polar.sh:</strong> GitHub entegrasyonlu ödemeler</li>
                   <li><strong>Freemius:</strong> SaaS odaklı ödeme sistemi</li>
                 </ul>
                 <p className="text-muted-foreground mt-4">
@@ -213,10 +210,7 @@ export default function TermsPage() {
                   FastReado uses the following providers for secure payment processing:
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                  <li><strong>Stripe:</strong> Credit card and digital wallet payments</li>
                   <li><strong>Lemon Squeezy:</strong> Global payment solutions</li>
-                  <li><strong>Coinbase Commerce:</strong> Cryptocurrency payments</li>
-                  <li><strong>Polar.sh:</strong> GitHub-integrated payments</li>
                   <li><strong>Freemius:</strong> SaaS-focused payment system</li>
                 </ul>
                 <p className="text-muted-foreground mt-4">

@@ -19,19 +19,17 @@ export async function createFreemiusCheckout(
   const planPrice = getPlanPrice(plan, language)
 
   try {
-    // Freemius checkout URL'i oluştur
+    // Freemius checkout URL'ini direkt oluştur
+    const freemiusPlanId = process.env.FREEMIUS_PREMIUM_PLAN_ID || '35850'
+    const isTestMode = process.env.FREEMIUS_TEST_MODE === 'true'
+    
+    // Checkout URL parametreleri
     const checkoutParams = new URLSearchParams({
-      plugin_id: process.env.FREEMIUS_ID!,
-      public_key: process.env.FREEMIUS_PUBLIC_KEY!,
-      plan_id: planId,
-      pricing_id: planId === 'premium' ? '1' : '2', // Freemius'ta oluşturduğunuz pricing ID'leri
-      currency: language === 'en' ? 'USD' : 'TRY',
-      billing_cycle: 'monthly',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/account?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
       user_email: userEmail,
       user_firstname: 'User',
       user_lastname: 'Name',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/library?upgraded=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
       custom_data: JSON.stringify({
         user_id: userId,
         plan_id: planId,
@@ -39,7 +37,15 @@ export async function createFreemiusCheckout(
       }),
     })
 
-    const checkoutUrl = `https://checkout.freemius.com/mode/dialog/plugin/${process.env.FREEMIUS_ID}/plan/${planId}/?${checkoutParams.toString()}`
+    // Test mode için sandbox parametresi ekle
+    if (isTestMode) {
+      checkoutParams.append('sandbox', 'true')
+    }
+
+    // Freemius checkout URL'i
+    const checkoutUrl = `https://checkout.freemius.com/product/${process.env.FREEMIUS_ID}/plan/${freemiusPlanId}/?${checkoutParams.toString()}`
+
+    console.log('Freemius checkout URL:', checkoutUrl)
 
     return { 
       success: true, 
@@ -61,37 +67,81 @@ export async function handleFreemiusWebhook(event: any) {
   try {
     await connectToDatabase()
 
-    switch (event.type) {
+    console.log("Freemius webhook event:", JSON.stringify(event, null, 2))
+
+    // Freemius webhook event yapısını kontrol et
+    const eventType = event.type || event.event_type
+    const eventData = event.data || event.object || event
+
+    switch (eventType) {
       case 'subscription.created':
-      case 'subscription.updated': {
-        const subscription = event.object
-        const customData = JSON.parse(subscription.custom_data || '{}')
-        const userId = customData.user_id
+      case 'subscription.updated':
+      case 'purchase.created':
+      case 'purchase.completed': {
+        // Custom data'dan user ID'yi al
+        let userId = null
+        
+        if (eventData.custom_data) {
+          try {
+            const customData = typeof eventData.custom_data === 'string' 
+              ? JSON.parse(eventData.custom_data) 
+              : eventData.custom_data
+            userId = customData.user_id
+          } catch (e) {
+            console.error("Failed to parse custom_data:", e)
+          }
+        }
+
+        // Alternatif olarak user email'den bul
+        if (!userId && eventData.user && eventData.user.email) {
+          const user = await User.findOne({ email: eventData.user.email })
+          if (user) userId = user._id.toString()
+        }
 
         if (!userId) {
-          console.error("Missing user_id in Freemius webhook")
+          console.error("Missing user_id in Freemius webhook:", eventData)
           return { success: false, error: "Missing user_id" }
         }
 
-        // Kullanıcıyı premium yap
-        await User.findByIdAndUpdate(userId, {
-          isPremium: true,
-          premiumPlan: customData.plan_id || 'premium',
-          premiumStartDate: new Date(),
-          premiumEndDate: new Date(subscription.next_payment * 1000), // Unix timestamp to Date
-          paymentProvider: 'freemius',
-          paymentId: subscription.id
-        })
+        // Premium süresini hesapla (30 gün)
+        const premiumEndDate = new Date()
+        premiumEndDate.setDate(premiumEndDate.getDate() + 30)
 
-        console.log(`User ${userId} upgraded via Freemius`)
+        // Kullanıcıyı premium yap
+        const updateResult = await User.findByIdAndUpdate(userId, {
+          isPremium: true,
+          plan: 'premium',
+          premiumPlan: 'premium',
+          premiumStartDate: new Date(),
+          premiumEndDate: premiumEndDate,
+          paymentProvider: 'freemius',
+          paymentId: eventData.id || eventData.subscription_id
+        }, { new: true })
+
+        console.log(`User ${userId} upgraded to premium via Freemius:`, updateResult)
         return { success: true }
       }
 
       case 'subscription.cancelled':
-      case 'subscription.expired': {
-        const subscription = event.object
-        const customData = JSON.parse(subscription.custom_data || '{}')
-        const userId = customData.user_id
+      case 'subscription.expired':
+      case 'subscription.suspended': {
+        let userId = null
+        
+        if (eventData.custom_data) {
+          try {
+            const customData = typeof eventData.custom_data === 'string' 
+              ? JSON.parse(eventData.custom_data) 
+              : eventData.custom_data
+            userId = customData.user_id
+          } catch (e) {
+            console.error("Failed to parse custom_data:", e)
+          }
+        }
+
+        if (!userId && eventData.user && eventData.user.email) {
+          const user = await User.findOne({ email: eventData.user.email })
+          if (user) userId = user._id.toString()
+        }
 
         if (!userId) {
           console.error("Missing user_id in Freemius webhook")
@@ -101,6 +151,7 @@ export async function handleFreemiusWebhook(event: any) {
         // Kullanıcının premium'unu iptal et
         await User.findByIdAndUpdate(userId, {
           isPremium: false,
+          plan: 'free',
           premiumPlan: null,
           premiumEndDate: new Date(),
           paymentProvider: null,
@@ -112,7 +163,7 @@ export async function handleFreemiusWebhook(event: any) {
       }
 
       default:
-        console.log(`Unhandled Freemius event: ${event.type}`)
+        console.log(`Unhandled Freemius event: ${eventType}`)
         return { success: true }
     }
   } catch (error) {

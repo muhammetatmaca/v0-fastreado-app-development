@@ -289,12 +289,12 @@ export function getAvailablePaymentMethods(): string[] {
     const deviceInfo = bridge.getDeviceInfo()
     
     if (deviceInfo.platform === 'android') {
-      return ['googleplay', 'lemon', 'paddle', 'crypto']
+      return ['googleplay', 'lemon', 'paddle']
     } else if (deviceInfo.platform === 'ios') {
-      return ['appstore', 'lemon', 'paddle', 'crypto']
+      return ['appstore', 'lemon', 'paddle']
     }
   }
   
   // Web fallback
-  return ['lemon', 'paddle', 'freemius', 'polar', 'revenuecat', 'crypto', 'demo']
+  return ['lemon', 'paddle', 'freemius']
 }

@@ -3,13 +3,15 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Check, Zap } from "lucide-react"
+import { Check, Zap, Crown } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { LanguageFlags } from "@/components/language-flags"
 import { SUBSCRIPTION_PLANS, getPlanPrice } from "@/lib/products"
+import { usePremium } from "@/hooks/usePremium"
 
 export default function PricingPage() {
   const { t, language } = useTranslation()
+  const { isPremium, isExpired, endDate, daysLeft, loading } = usePremium()
   
   const freePlan = SUBSCRIPTION_PLANS.find(p => p.id === 'free')!
   const premiumPlan = SUBSCRIPTION_PLANS.find(p => p.id === 'premium')!
@@ -29,6 +31,36 @@ export default function PricingPage() {
 
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-5xl mx-auto">
+          {/* Premium Status Banner */}
+          {!loading && isPremium && !isExpired && (
+            <div className="mb-8 p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg">
+              <div className="flex items-center justify-center gap-2 text-yellow-800">
+                <Crown className="w-5 h-5" />
+                <span className="font-semibold">
+                  {language === 'tr' 
+                    ? `Premium üyesiniz! ${daysLeft} gün kaldı (${endDate?.toLocaleDateString('tr-TR')} tarihine kadar)`
+                    : `You are a Premium member! ${daysLeft} days left (until ${endDate?.toLocaleDateString('en-US')})`
+                  }
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Expired Premium Banner */}
+          {!loading && isExpired && (
+            <div className="mb-8 p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg">
+              <div className="flex items-center justify-center gap-2 text-red-800">
+                <Crown className="w-5 h-5" />
+                <span className="font-semibold">
+                  {language === 'tr' 
+                    ? 'Premium aboneliğinizin süresi doldu. Yeniden abone olun!'
+                    : 'Your Premium subscription has expired. Subscribe again!'
+                  }
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="text-center mb-16">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 font-fragor">
               {language === 'tr' ? 'Basit ve şeffaf fiyatlandırma' : 'Simple and transparent pricing'}
@@ -136,11 +168,18 @@ export default function PricingPage() {
                 </li>
               </ul>
 
-              <Button className="w-full" asChild>
-                <Link href="/checkout/premium">
-                  {language === 'tr' ? 'Premium\'a Geç' : 'Upgrade to Premium'}
-                </Link>
-              </Button>
+              {isPremium && !isExpired ? (
+                <Button className="w-full" disabled>
+                  <Crown className="w-4 h-4 mr-2" />
+                  {language === 'tr' ? 'Aktif Premium' : 'Active Premium'}
+                </Button>
+              ) : (
+                <Button className="w-full" asChild>
+                  <Link href="/checkout/premium">
+                    {language === 'tr' ? 'Premium\'a Geç' : 'Upgrade to Premium'}
+                  </Link>
+                </Button>
+              )}
             </Card>
           </div>
 

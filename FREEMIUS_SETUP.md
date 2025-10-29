@@ -1,176 +1,94 @@
-# Freemius Kurulum Rehberi
-
-Bu rehber, FastReado uygulamanızda Freemius ile SaaS ödemelerini nasıl aktif hale getireceğinizi gösterir.
+# Freemius Entegrasyonu Rehberi
 
 ## 1. Freemius Hesabı Oluşturma
 
-1. https://dashboard.freemius.com/ adresine gidin
-2. "Sign Up" butonuna tıklayın
-3. E-posta ve şifre ile hesap oluşturun
-4. E-posta doğrulamasını tamamlayın
+1. [Freemius Dashboard](https://dashboard.freemius.com/) adresine gidin
+2. Hesap oluşturun veya giriş yapın
+3. "Add New Product" butonuna tıklayın
+4. Ürün tipini "SaaS" olarak seçin
 
-## 2. Plugin/Product Oluşturma
+## 2. Ürün Konfigürasyonu
 
-1. Dashboard'da "Add New Product" butonuna tıklayın
-2. Product Type: "SaaS" seçin
-3. Product Name: "FastReado" yazın
-4. Slug: "fastreado" yazın
-5. Description ve diğer bilgileri doldurun
-6. "Create Product" butonuna tıklayın
+### Temel Bilgiler
+- **Product Name**: FastReado
+- **Product Type**: SaaS
+- **Category**: Productivity
+- **Description**: Fast reading and PDF processing tool
 
-## 3. Plans ve Pricing Oluşturma
+### Pricing Plans
+Aşağıdaki planları oluşturun:
 
-### Plan Oluşturma:
-1. Product sayfasında "Plans & Pricing" sekmesine gidin
-2. "Add Plan" butonuna tıklayın
-3. Plan Name: "Premium" yazın
-4. Plan ID: "premium" yazın
-5. Features listesini doldurun
+#### Free Plan
+- **Plan Name**: Free
+- **Price**: $0
+- **Billing Cycle**: Monthly
+- **Features**: 2 PDFs per month, Basic reading modes
 
-### Pricing Oluşturma:
-1. Plan'ın yanındaki "Add Pricing" butonuna tıklayın
-2. Price: $2.99 yazın
-3. Currency: USD seçin
-4. Billing Cycle: Monthly seçin
-5. "Save" butonuna tıklayın
+#### Premium Plan
+- **Plan Name**: Premium
+- **Price**: $2.99 USD / ₺99 TRY
+- **Billing Cycle**: Monthly
+- **Features**: Unlimited PDFs, AI features, Priority support
 
-## 4. API Keys Alma
+## 3. API Keys Alma
 
-### Developer Dashboard:
-1. Sol menüden "Account" > "Billing" > "API" seçin
-2. "Generate New Key" butonuna tıklayın
-3. Key name: "FastReado API" yazın
-4. Permissions: "Read & Write" seçin
-5. API Key'i kopyalayın
+Dashboard'dan aşağıdaki bilgileri alın:
 
-### Public Key:
-1. Product sayfasında "Settings" sekmesine gidin
-2. "API" bölümünde Public Key'i bulun
-3. Key'i kopyalayın
+1. **Plugin/Product ID**: Dashboard > Your Product > Settings > General
+2. **Public Key**: Dashboard > Your Product > Settings > Keys > Public Key
+3. **Secret Key**: Dashboard > Your Product > Settings > Keys > Secret Key
+4. **Webhook Secret**: Dashboard > Your Product > Settings > Webhooks > Secret
 
-### Product ID:
-1. Product sayfasında URL'deki ID'yi not alın
-2. Örnek: `/products/12345` → ID: 12345
+## 4. Environment Variables
 
-## 5. Webhook Kurulumu
-
-1. Product sayfasında "Settings" > "Webhooks" bölümüne gidin
-2. "Add Webhook" butonuna tıklayın
-3. URL: `https://yourdomain.com/api/webhooks/freemius`
-4. Events seçin:
-   - `subscription.created`
-   - `subscription.updated`
-   - `subscription.cancelled`
-   - `subscription.expired`
-5. Secret key oluşturun ve kaydedin
-
-## 6. .env Dosyasını Güncelleme
-
-`.env` dosyanızda şu değerleri güncelleyin:
+`.env` dosyanıza aşağıdaki değişkenleri ekleyin:
 
 ```env
 # Freemius configuration
-FREEMIUS_ID=12345
-FREEMIUS_PUBLIC_KEY=pk_1234567890abcdef
-FREEMIUS_SECRET_KEY=sk_1234567890abcdef
-FREEMIUS_WEBHOOK_SECRET=whsec_1234567890abcdef
+FREEMIUS_ID=your_product_id_here
+FREEMIUS_PUBLIC_KEY=pk_your_public_key_here
+FREEMIUS_SECRET_KEY=sk_your_secret_key_here
+FREEMIUS_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 ```
 
-## 7. Test Etme
+## 5. Webhook URL Konfigürasyonu
 
-### Sandbox Mode:
-1. Freemius dashboard'da "Settings" > "General" bölümüne gidin
-2. "Sandbox Mode" seçeneğini aktif edin
-3. Test ödemeleri yapabilirsiniz
+Freemius Dashboard'da webhook URL'ini ayarlayın:
+- **Webhook URL**: `https://yourdomain.com/api/webhooks/freemius`
+- **Events**: subscription.created, subscription.updated, subscription.cancelled, subscription.expired
 
-### Test Kartları:
-- Visa: 4242424242424242
-- Mastercard: 5555555555554444
-- Expiry: Gelecekteki herhangi bir tarih
-- CVC: Herhangi 3 haneli sayı
+## 6. Test Etme
 
-## 8. Canlı Moda Geçiş
+1. Checkout sayfasında Freemius seçeneğini seçin
+2. Test ödeme yapın (Freemius sandbox modunda)
+3. Webhook'ların çalıştığını kontrol edin
+4. Kullanıcının premium'a yükseltildiğini doğrulayın
 
-1. Sandbox mode'u kapatın
-2. Gerçek banka hesabı bilgilerinizi ekleyin
-3. Tax settings'i yapılandırın
-4. Canlı ödemeleri kabul etmeye başlayın
+## 7. Production'a Geçiş
 
-## 9. Freemius Özellikleri
+1. Freemius Dashboard'da "Live Mode" aktif edin
+2. Production API keys'lerini `.env` dosyasına ekleyin
+3. Webhook URL'ini production domain'e güncelleyin
+4. Test ödemesi yaparak doğrulayın
 
-### Avantajları:
-- **SaaS Odaklı**: WordPress ve SaaS ürünleri için özel
-- **Otomatik Faturalandırma**: Recurring payments
-- **Tax Management**: Otomatik vergi hesaplama
-- **Analytics**: Detaylı satış raporları
-- **Customer Portal**: Kullanıcı self-service
-- **Affiliate System**: Ortaklık programı
+## Önemli Notlar
 
-### Desteklenen Ödeme Yöntemleri:
-- Kredi/Debit kartları
-- PayPal
-- Apple Pay
-- Google Pay
-- Bank transfers (bazı ülkelerde)
+- Freemius, WordPress ve SaaS ürünleri için optimize edilmiştir
+- Otomatik vergi hesaplama ve fatura oluşturma sunar
+- Çoklu para birimi desteği vardır
+- Abonelik yönetimi otomatiktir
+- Müşteri portalı built-in gelir
 
-## 10. Webhook Events
+## Sorun Giderme
 
-Freemius'un gönderdiği önemli events:
+### Yaygın Hatalar
 
-```javascript
-// Abonelik oluşturuldu
-subscription.created
+1. **Invalid API Keys**: Keys'lerin doğru kopyalandığından emin olun
+2. **Webhook Verification Failed**: Webhook secret'ın doğru olduğunu kontrol edin
+3. **Plan Not Found**: Plan ID'lerinin Freemius dashboard'daki ile eşleştiğinden emin olun
 
-// Abonelik güncellendi
-subscription.updated
+### Debug İpuçları
 
-// Ödeme başarılı
-payment.completed
-
-// Ödeme başarısız
-payment.failed
-
-// Abonelik iptal edildi
-subscription.cancelled
-
-// Abonelik süresi doldu
-subscription.expired
-
-// Deneme süresi başladı
-trial.started
-
-// Deneme süresi bitti
-trial.ended
-```
-
-## 11. Sorun Giderme
-
-### Yaygın Sorunlar:
-
-1. **Checkout açılmıyor:**
-   - Public key'in doğru olduğundan emin olun
-   - Plan ID'lerinin eşleştiğinden emin olun
-
-2. **Webhook çalışmıyor:**
-   - URL'nin doğru olduğundan emin olun
-   - HTTPS kullandığınızdan emin olun
-   - Webhook secret'ın doğru olduğundan emin olun
-
-3. **Ödeme onaylanmıyor:**
-   - Event type'ları kontrol edin
-   - Custom data'nın doğru parse edildiğinden emin olun
-
-## 12. Faydalı Linkler
-
-- [Freemius Documentation](https://freemius.com/help/)
-- [API Reference](https://freemius.com/help/documentation/api/)
-- [Webhook Guide](https://freemius.com/help/documentation/webhooks/)
-- [Checkout Customization](https://freemius.com/help/documentation/checkout/)
-- [Testing Guide](https://freemius.com/help/documentation/testing/)
-
-## 13. Destek
-
-Sorunlarınız için:
-- Freemius Support: https://freemius.com/contact/
-- Documentation: https://freemius.com/help/
-- Community Forum: https://freemius.com/forums/
+- Freemius Dashboard > Logs bölümünden webhook loglarını kontrol edin
+- Browser console'da JavaScript hatalarını kontrol edin
+- Server loglarında webhook processing hatalarını kontrol edin

@@ -32,6 +32,13 @@ interface IUser {
   verificationExpires?: Date
   pdfs?: PDFMetadata[]
   purchases?: Purchase[]
+  // Premium subscription fields
+  isPremium: boolean
+  premiumPlan?: string
+  premiumStartDate?: Date
+  premiumEndDate?: Date
+  paymentProvider?: string
+  paymentId?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -65,6 +72,31 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     enum: ['free', 'premium'],
     default: 'free'
+  },
+  // Premium subscription fields
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  premiumPlan: {
+    type: String,
+    default: null
+  },
+  premiumStartDate: {
+    type: Date,
+    default: null
+  },
+  premiumEndDate: {
+    type: Date,
+    default: null
+  },
+  paymentProvider: {
+    type: String,
+    default: null
+  },
+  paymentId: {
+    type: String,
+    default: null
   },
   isVerified: {
     type: Boolean,

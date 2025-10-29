@@ -286,11 +286,7 @@ export default function RefundPage() {
                         <td className="border border-border p-3">5-10 business days</td>
                         <td className="border border-border p-3">International transfers take longer</td>
                       </tr>
-                      <tr>
-                        <td className="border border-border p-3">Cryptocurrency</td>
-                        <td className="border border-border p-3">1-2 business days</td>
-                        <td className="border border-border p-3">Depends on blockchain confirmation</td>
-                      </tr>
+
                     </tbody>
                   </table>
                 </div>

@@ -78,7 +78,7 @@ export default function PrivacyPage() {
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-2">
                   <li>Yasal zorunluluklar veya güvenlik tehditleri</li>
-                  <li>Ödeme işlemleri için güvenilir ödeme sağlayıcıları (Stripe, Lemon Squeezy, vb.)</li>
+                  <li>Ödeme işlemleri için güvenilir ödeme sağlayıcıları (Lemon Squeezy, vb.)</li>
                   <li>Hizmet sağlayıcıları (hosting, e-posta servisleri)</li>
                   <li>Açık rızanızla paylaşım</li>
                 </ul>
@@ -90,10 +90,7 @@ export default function PrivacyPage() {
                   Ödeme işlemleri için aşağıdaki güvenilir sağlayıcıları kullanıyoruz:
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                  <li><strong>Stripe:</strong> PCI DSS Level 1 sertifikalı</li>
                   <li><strong>Lemon Squeezy:</strong> Avrupa merkezli ödeme sistemi</li>
-                  <li><strong>Coinbase Commerce:</strong> Kripto para ödemeleri</li>
-                  <li><strong>Polar.sh:</strong> GitHub entegrasyonlu ödemeler</li>
                   <li><strong>Freemius:</strong> SaaS odaklı ödeme sistemi</li>
                 </ul>
                 <p className="text-muted-foreground mt-4">
@@ -168,7 +165,7 @@ export default function PrivacyPage() {
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-2">
                   <li>Legal obligations or security threats</li>
-                  <li>Trusted payment providers for payment processing (Stripe, Lemon Squeezy, etc.)</li>
+                  <li>Trusted payment providers for payment processing (Lemon Squeezy, etc.)</li>
                   <li>Service providers (hosting, email services)</li>
                   <li>Sharing with your explicit consent</li>
                 </ul>
@@ -180,10 +177,7 @@ export default function PrivacyPage() {
                   We use the following trusted providers for payment processing:
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                  <li><strong>Stripe:</strong> PCI DSS Level 1 certified</li>
                   <li><strong>Lemon Squeezy:</strong> Europe-based payment system</li>
-                  <li><strong>Coinbase Commerce:</strong> Cryptocurrency payments</li>
-                  <li><strong>Polar.sh:</strong> GitHub-integrated payments</li>
                   <li><strong>Freemius:</strong> SaaS-focused payment system</li>
                 </ul>
                 <p className="text-muted-foreground mt-4">
