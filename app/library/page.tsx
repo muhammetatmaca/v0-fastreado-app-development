@@ -11,6 +11,7 @@ import { LanguageFlags } from "@/components/language-flags"
 import Link from "next/link"
 import { AIFeaturesDialog } from "@/components/ai-features-dialog"
 import { useAuth } from "@/contexts/auth-context"
+import { GOOGLE_DRIVE_PDFS } from "@/lib/google-drive"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,8 @@ interface PDF {
   progress: number
   isUserUploaded?: boolean // Kullanıcının yüklediği PDF'ler için
   fileData?: string // Base64 encoded PDF data
+  driveFileId?: string // Google Drive file ID
+  description?: string // PDF açıklaması
 }
 
 export default function LibraryPage() {
@@ -79,99 +82,8 @@ export default function LibraryPage() {
     }
   }, [user, isLoading, updateUser, router])
 
-  // Default library books (always available)
-  const defaultBooks: PDF[] = [
-    {
-      id: "1",
-      title: "Nutuk - Mustafa Kemal Atatürk",
-      coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
-      pageCount: 542,
-      uploadDate: "2024-01-15",
-      progress: 0,
-      isUserUploaded: false,
-    },
-    {
-      id: "2",
-      title: "Safahat - Mehmet Akif Ersoy",
-      coverUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=600&fit=crop",
-      pageCount: 324,
-      uploadDate: "2024-01-14",
-      progress: 25,
-      isUserUploaded: false,
-    },
-    {
-      id: "3",
-      title: "Kuyucaklı Yusuf - Sabahattin Ali",
-      coverUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
-      pageCount: 198,
-      uploadDate: "2024-01-13",
-      progress: 60,
-      isUserUploaded: false,
-    },
-    {
-      id: "4",
-      title: "İçimizdeki Şeytan - Sabahattin Ali",
-      coverUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-      pageCount: 156,
-      uploadDate: "2024-01-12",
-      progress: 100,
-      isUserUploaded: false,
-    },
-    {
-      id: "5",
-      title: "Sinekli Bakkal - Halide Edib Adıvar",
-      coverUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
-      pageCount: 287,
-      uploadDate: "2024-01-11",
-      progress: 0,
-      isUserUploaded: false,
-    },
-    {
-      id: "6",
-      title: "Çalıkuşu - Reşat Nuri Güntekin",
-      coverUrl: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=600&fit=crop",
-      pageCount: 342,
-      uploadDate: "2024-01-10",
-      progress: 35,
-      isUserUploaded: false,
-    },
-    {
-      id: "7",
-      title: "Aşk-ı Memnu - Halit Ziya Uşaklıgil",
-      coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
-      pageCount: 456,
-      uploadDate: "2024-01-09",
-      progress: 80,
-      isUserUploaded: false,
-    },
-    {
-      id: "8",
-      title: "Tutunamayanlar - Oğuz Atay",
-      coverUrl: "https://images.unsplash.com/photo-1550399105-c4db5fb85c18?w=400&h=600&fit=crop",
-      pageCount: 724,
-      uploadDate: "2024-01-08",
-      progress: 15,
-      isUserUploaded: false,
-    },
-    {
-      id: "9",
-      title: "Beyaz Kale - Orhan Pamuk",
-      coverUrl: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
-      pageCount: 198,
-      uploadDate: "2024-01-07",
-      progress: 90,
-      isUserUploaded: false,
-    },
-    {
-      id: "10",
-      title: "Sevgili Arsız Ölüm - Nazim Hikmet",
-      coverUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop",
-      pageCount: 234,
-      uploadDate: "2024-01-06",
-      progress: 45,
-      isUserUploaded: false,
-    },
-  ]
+  // Google Drive PDF'leri (gerçek kitaplar) - lib/google-drive.ts'den alınıyor
+  const driveBooks: PDF[] = GOOGLE_DRIVE_PDFS
 
   const [pdfs, setPdfs] = useState<PDF[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -191,8 +103,8 @@ export default function LibraryPage() {
       const savedProgress = localStorage.getItem(`pdf_progress_${user.id}`)
       const progressData = savedProgress ? JSON.parse(savedProgress) : {}
       
-      // Merge default books with user uploads and apply saved progress
-      const allPdfs = [...defaultBooks.map(book => ({
+      // Merge Google Drive books with user uploads and apply saved progress
+      const allPdfs = [...driveBooks.map(book => ({
         ...book,
         progress: progressData[book.id] || book.progress
       })), ...userPdfs]
