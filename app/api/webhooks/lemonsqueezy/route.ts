@@ -1,61 +1,61 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { handleLemonSqueezyWebhook } from '@/app/actions/lemonsqueezy'
-import crypto from 'crypto'
+import { headers } from "next/headers"
+import { NextResponse } from "next/server"
+import crypto from "crypto"
+import { handleLemonSqueezyWebhook } from "@/app/actions/lemonsqueezy"
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
+  const body = await req.text()
+  const headersList = await headers()
+  const signature = headersList.get("X-Signature") as string
+
+  // Webhook signature doğrulama
+  if (process.env.LEMONSQUEEZY_WEBHOOK_SECRET) {
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.LEMONSQUEEZY_WEBHOOK_SECRET)
+      .update(body)
+      .digest("hex")
+
+    if (signature !== expectedSignature) {
+      console.error("Invalid Lemon Squeezy webhook signature")
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+    }
+  }
+
+  let event
   try {
-    const body = await request.text()
-    const signature = request.headers.get('x-signature')
-    
-    // Verify webhook signature
-    if (!verifyWebhookSignature(body, signature)) {
-      console.error('Invalid webhook signature')
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-    }
-    
-    const payload = JSON.parse(body)
-    const eventName = payload.meta?.event_name
-    
-    if (!eventName) {
-      console.error('No event name found in webhook payload')
-      return NextResponse.json({ error: 'No event name' }, { status: 400 })
-    }
-    
-    // Handle the webhook
-    const result = await handleLemonSqueezyWebhook(eventName, payload)
-    
-    if (result.success) {
-      return NextResponse.json({ message: 'Webhook processed successfully' })
-    } else {
-      console.error('Webhook processing failed:', result.error)
-      return NextResponse.json({ error: result.error }, { status: 500 })
-    }
-    
+    event = JSON.parse(body)
   } catch (error) {
-    console.error('Lemon Squeezy webhook error:', error)
-    return NextResponse.json({ 
-      error: 'Webhook processing failed' 
-    }, { status: 500 })
+    console.error("Invalid JSON in webhook body")
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+  }
+
+  console.log(`Received Lemon Squeezy event: ${event.meta?.event_name}`)
+
+  try {
+    const result = await handleLemonSqueezyWebhook(event.meta?.event_name, event)
+    
+    if (!result.success) {
+      console.error("Webhook processing failed:", result.error)
+      return NextResponse.json(
+        { error: "Webhook processing failed" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ received: true })
+  } catch (error) {
+    console.error(`Error processing Lemon Squeezy webhook:`, error)
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 }
+    )
   }
 }
 
-function verifyWebhookSignature(payload: string, signature: string | null): boolean {
-  if (!signature || !process.env.LEMONSQUEEZY_WEBHOOK_SECRET) {
-    return false
-  }
-  
-  try {
-    const hmac = crypto.createHmac('sha256', process.env.LEMONSQUEEZY_WEBHOOK_SECRET)
-    hmac.update(payload, 'utf8')
-    const digest = hmac.digest('hex')
-    
-    // Convert to Uint8Array for timingSafeEqual
-    const signatureBuffer = new Uint8Array(Buffer.from(signature, 'hex'))
-    const digestBuffer = new Uint8Array(Buffer.from(digest, 'hex'))
-    
-    return crypto.timingSafeEqual(signatureBuffer, digestBuffer)
-  } catch (error) {
-    console.error('Signature verification error:', error)
-    return false
-  }
+// Test endpoint
+export async function GET() {
+  return NextResponse.json({ 
+    status: "Lemon Squeezy webhook endpoint is active",
+    timestamp: new Date().toISOString()
+  })
 }

@@ -152,6 +152,7 @@ export async function handleLemonSqueezyWebhook(eventName: string, payload: any)
     switch (eventName) {
       case 'subscription_created':
       case 'subscription_updated':
+      case 'subscription_payment_success':
         // Upgrade user to premium
         user.plan = 'premium'
         
@@ -165,14 +166,14 @@ export async function handleLemonSqueezyWebhook(eventName: string, payload: any)
           productId: planId || 'premium',
           purchaseToken: data.id,
           orderId: data.attributes.order_id?.toString(),
-          purchaseTime: new Date(data.attributes.created_at),
-          amount: data.attributes.subtotal / 100, // Convert cents to currency
-          currency: data.attributes.currency,
+          purchaseTime: new Date(data.attributes.created_at || new Date()),
+          amount: data.attributes.subtotal ? data.attributes.subtotal / 100 : 0,
+          currency: data.attributes.currency || 'USD',
           status: 'completed'
         })
         
         await user.save()
-        console.log('User upgraded to premium:', userId)
+        console.log('User upgraded to premium:', userId, 'Event:', eventName)
         break
 
       case 'subscription_cancelled':
@@ -180,7 +181,38 @@ export async function handleLemonSqueezyWebhook(eventName: string, payload: any)
         // Downgrade user to free
         user.plan = 'free'
         await user.save()
-        console.log('User downgraded to free:', userId)
+        console.log('User downgraded to free:', userId, 'Event:', eventName)
+        break
+
+      case 'subscription_payment_failed':
+        // Ödeme başarısız - kullanıcıyı uyar ama hemen downgrade etme
+        console.log('Payment failed for user:', userId)
+        // İsteğe bağlı: E-posta gönder veya kullanıcıyı bilgilendir
+        break
+
+      case 'subscription_payment_recovered':
+        // Ödeme kurtarıldı - kullanıcı premium'da kalabilir
+        user.plan = 'premium'
+        await user.save()
+        console.log('Payment recovered for user:', userId)
+        break
+
+      case 'subscription_payment_refunded':
+        // Ödeme iade edildi - kullanıcıyı free'ye düşür
+        user.plan = 'free'
+        
+        // Purchase record'u güncelle
+        if (user.purchases) {
+          const purchaseIndex = user.purchases.findIndex(p => 
+            p.provider === 'lemonsqueezy' && p.purchaseToken === data.id
+          )
+          if (purchaseIndex !== -1) {
+            user.purchases[purchaseIndex].status = 'refunded'
+          }
+        }
+        
+        await user.save()
+        console.log('Payment refunded for user:', userId)
         break
 
       case 'order_created':

@@ -11,7 +11,8 @@ import { LanguageFlags } from "@/components/language-flags"
 import Link from "next/link"
 import { AIFeaturesDialog } from "@/components/ai-features-dialog"
 import { useAuth } from "@/contexts/auth-context"
-import { GOOGLE_DRIVE_PDFS } from "@/lib/google-drive"
+import { GOOGLE_DRIVE_PUBLIC_BOOKS } from "@/lib/google-drive"
+import { getUserDrivePdfs } from "@/lib/user-drive-upload"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,9 +40,11 @@ interface PDF {
   uploadDate: string
   progress: number
   isUserUploaded?: boolean // Kullanıcının yüklediği PDF'ler için
-  fileData?: string // Base64 encoded PDF data
+  fileData?: string // Base64 encoded PDF data (localStorage için)
   driveFileId?: string // Google Drive file ID
   description?: string // PDF açıklaması
+  isPublicBook?: boolean // Genel kitap mı kullanıcı kitabı mı
+  userId?: string // Hangi kullanıcının kitabı
 }
 
 export default function LibraryPage() {
@@ -82,8 +85,8 @@ export default function LibraryPage() {
     }
   }, [user, isLoading, updateUser, router])
 
-  // Google Drive PDF'leri (gerçek kitaplar) - lib/google-drive.ts'den alınıyor
-  const driveBooks: PDF[] = GOOGLE_DRIVE_PDFS
+  // Google Drive genel kitapları
+  const publicBooks: PDF[] = GOOGLE_DRIVE_PUBLIC_BOOKS
 
   const [pdfs, setPdfs] = useState<PDF[]>([])
   const [isUploading, setIsUploading] = useState(false)

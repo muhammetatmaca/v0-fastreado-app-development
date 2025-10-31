@@ -12,7 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation"
 // Payment integration components
 
 export default function Checkout({ planId }: { planId: string }) {
-  const [paymentMethod, setPaymentMethod] = useState<'lemon' | 'paddle' | 'freemius' | 'googleplay'>('lemon')
+  const [paymentMethod, setPaymentMethod] = useState<'lemon' | 'googleplay'>('lemon')
   const { language } = useTranslation()
   const plan = getPlanById(planId)
   const router = useRouter()
@@ -35,84 +35,48 @@ export default function Checkout({ planId }: { planId: string }) {
       </div>
 
       {/* Payment Method Selector */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-2xl mx-auto">
         <Card 
-          className={`p-4 cursor-pointer border-2 transition-colors ${
+          className={`p-6 cursor-pointer border-2 transition-colors ${
             paymentMethod === 'lemon' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
           }`}
           onClick={() => setPaymentMethod('lemon')}
         >
           <div className="text-center">
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">🍋</span>
+            <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🍋</span>
             </div>
-            <h4 className="font-semibold mb-1">Lemon Squeezy</h4>
+            <h4 className="font-semibold mb-2 text-lg">Lemon Squeezy</h4>
             <p className="text-sm text-muted-foreground">
-              {language === 'tr' ? 'Kredi kartı, PayPal' : 'Credit card, PayPal'}
+              {language === 'tr' ? 'Kredi kartı, PayPal, Apple Pay' : 'Credit card, PayPal, Apple Pay'}
             </p>
           </div>
         </Card>
 
         <Card 
-          className={`p-4 cursor-pointer border-2 transition-colors ${
-            paymentMethod === 'paddle' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-          }`}
-          onClick={() => setPaymentMethod('paddle')}
-        >
-          <div className="text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">🏓</span>
-            </div>
-            <h4 className="font-semibold mb-1">Paddle</h4>
-            <p className="text-sm text-muted-foreground">
-              {language === 'tr' ? 'Global ödeme sistemi' : 'Global payment system'}
-            </p>
-          </div>
-        </Card>
-
-        <Card 
-          className={`p-3 cursor-pointer border-2 transition-colors ${
-            paymentMethod === 'freemius' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-          }`}
-          onClick={() => setPaymentMethod('freemius')}
-        >
-          <div className="text-center">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <span className="text-lg">🚀</span>
-            </div>
-            <h4 className="font-semibold mb-1 text-sm">Freemius</h4>
-            <p className="text-xs text-muted-foreground">
-              {language === 'tr' ? 'SaaS özel' : 'SaaS focused'}
-            </p>
-          </div>
-        </Card>
-
-
-
-        <Card 
-          className={`p-3 cursor-pointer border-2 transition-colors ${
+          className={`p-6 cursor-pointer border-2 transition-colors ${
             paymentMethod === 'googleplay' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
           }`}
           onClick={() => setPaymentMethod('googleplay')}
         >
           <div className="text-center">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <span className="text-lg">📱</span>
+            <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">📱</span>
             </div>
-            <h4 className="font-semibold mb-1 text-sm">Google Play</h4>
-            <p className="text-xs text-muted-foreground">
-              {language === 'tr' ? 'Mobil ödeme' : 'Mobile payment'}
+            <h4 className="font-semibold mb-2 text-lg">Google Play</h4>
+            <p className="text-sm text-muted-foreground">
+              {language === 'tr' ? 'Mobil ödeme sistemi' : 'Mobile payment system'}
             </p>
           </div>
         </Card>
+
+
 
 
       </div>
 
       {/* Payment Component */}
       {paymentMethod === 'lemon' && <LemonSqueezyCheckout planId={planId} />}
-      {paymentMethod === 'paddle' && <PaddleCheckout planId={planId} />}
-      {paymentMethod === 'freemius' && <FreemiusCheckout planId={planId} />}
       {paymentMethod === 'googleplay' && <GooglePlayCheckout planId={planId} />}
     </div>
   )
