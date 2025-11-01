@@ -4,8 +4,8 @@ import { SUBSCRIPTION_PLANS } from '@/lib/products'
 
 // Product variant mapping - Lemon Squeezy'den alınan gerçek ID'ler
 const VARIANT_IDS = {
-  premium: '1057551', // FASTREADO PRO - Monthly (₺99.90)
-  yearly: '1057551'   // Şimdilik aynı variant, yearly eklenirse güncellenecek
+  premium: '1066466', // FASTREADO PRO - Monthly - Product ID: 678363
+  yearly: '1066466'   // Şimdilik aynı variant, yearly eklenirse güncellenecek
 }
 
 export async function createLemonSqueezyCheckout(planId: string, userId: string, userEmail: string) {

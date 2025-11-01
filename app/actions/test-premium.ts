@@ -1,12 +1,12 @@
 "use server"
 
-import { connectToDatabase } from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 import { User } from "@/models/User"
 
 // Test amaçlı - kullanıcıyı premium yap
 export async function makeUserPremiumForTest(userId: string) {
   try {
-    await connectToDatabase()
+    await connectDB()
     
     const premiumEndDate = new Date()
     premiumEndDate.setDate(premiumEndDate.getDate() + 30) // 30 gün premium
@@ -33,7 +33,7 @@ export async function makeUserPremiumForTest(userId: string) {
 // Test amaçlı - kullanıcıyı free yap
 export async function makeUserFreeForTest(userId: string) {
   try {
-    await connectToDatabase()
+    await connectDB()
     
     const result = await User.findByIdAndUpdate(userId, {
       isPremium: false,

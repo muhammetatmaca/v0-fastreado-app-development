@@ -1,6 +1,6 @@
 "use server"
 
-import { connectToDatabase } from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 import { User } from "@/models/User"
 import { SUBSCRIPTION_PLANS, getPlanPrice } from "@/lib/products"
 
@@ -65,7 +65,7 @@ export async function createFreemiusCheckout(
 
 export async function handleFreemiusWebhook(event: any) {
   try {
-    await connectToDatabase()
+    await connectDB()
 
     console.log("Freemius webhook event:", JSON.stringify(event, null, 2))
 

@@ -1,11 +1,11 @@
 "use server"
 
-import { connectToDatabase } from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 import { User } from "@/models/User"
 
 export async function checkUserPremiumStatus(userId: string) {
   try {
-    await connectToDatabase()
+    await connectDB()
     
     const user = await User.findById(userId)
     if (!user) {
@@ -64,7 +64,7 @@ export async function getUserPDFLimit(userId: string) {
 
 export async function canUserAccessPDF(userId: string, pdfId: string) {
   try {
-    await connectToDatabase()
+    await connectDB()
     
     const user = await User.findById(userId)
     if (!user) return false

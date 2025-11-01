@@ -39,22 +39,19 @@ if (process.env.NODE_ENV === "development") {
 let isConnected = false
 
 export const connectDB = async () => {
-  if (isConnected) {
+  if (isConnected && mongoose.connection.readyState === 1) {
     return
   }
 
   try {
-    await mongoose.connect(uri, {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
-    })
+    // Simple connection without complex options
+    await mongoose.connect(uri)
     
     isConnected = true
     console.log('MongoDB connected with Mongoose')
   } catch (error) {
     console.error('MongoDB connection error:', error)
+    isConnected = false
     throw error
   }
 }

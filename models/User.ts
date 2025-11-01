@@ -3,10 +3,18 @@ import mongoose from 'mongoose'
 interface PDFMetadata {
   id: string
   title: string
+  driveFileId?: string
+  coverUrl?: string
   pageCount: number
   uploadDate: string
   progress: number
   isUserUploaded: boolean
+  isPublicBook?: boolean
+  userId?: string
+  fileName?: string
+  fileSize?: number
+  webViewLink?: string
+  webContentLink?: string
 }
 
 interface Purchase {
@@ -32,6 +40,8 @@ interface IUser {
   verificationExpires?: Date
   pdfs?: PDFMetadata[]
   purchases?: Purchase[]
+  // Google Drive fields
+  driveFolderId?: string
   // Premium subscription fields
   isPremium: boolean
   premiumPlan?: string
@@ -39,6 +49,9 @@ interface IUser {
   premiumEndDate?: Date
   paymentProvider?: string
   paymentId?: string
+  // Password reset fields
+  resetPasswordToken?: string
+  resetPasswordExpires?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -54,7 +67,8 @@ const userSchema = new mongoose.Schema<IUser>({
     required: true,
     unique: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    index: true
   },
   password: {
     type: String,
@@ -62,7 +76,8 @@ const userSchema = new mongoose.Schema<IUser>({
   },
   googleId: {
     type: String,
-    sparse: true // Allow null values but ensure uniqueness when present
+    sparse: true, // Allow null values but ensure uniqueness when present
+    index: true
   },
   avatar: {
     type: String,
@@ -98,6 +113,15 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     default: null
   },
+  // Password reset fields
+  resetPasswordToken: {
+    type: String,
+    select: false
+  },
+  resetPasswordExpires: {
+    type: Date,
+    select: false
+  },
   isVerified: {
     type: Boolean,
     default: false
@@ -110,13 +134,26 @@ const userSchema = new mongoose.Schema<IUser>({
     type: Date,
     select: false
   },
+  // Google Drive fields
+  driveFolderId: {
+    type: String,
+    default: null
+  },
   pdfs: [{
     id: { type: String, required: true },
     title: { type: String, required: true },
+    driveFileId: { type: String },
+    coverUrl: { type: String },
     pageCount: { type: Number, required: true },
     uploadDate: { type: String, required: true },
     progress: { type: Number, default: 0 },
-    isUserUploaded: { type: Boolean, default: true }
+    isUserUploaded: { type: Boolean, default: true },
+    isPublicBook: { type: Boolean, default: false },
+    userId: { type: String },
+    fileName: { type: String },
+    fileSize: { type: Number },
+    webViewLink: { type: String },
+    webContentLink: { type: String }
   }],
   purchases: [{
     provider: { type: String, required: true },
@@ -137,8 +174,6 @@ const userSchema = new mongoose.Schema<IUser>({
 })
 
 // Indexes
-userSchema.index({ email: 1 })
-userSchema.index({ googleId: 1 })
 userSchema.index({ verificationCode: 1 })
 
 export const User = mongoose.models.User || mongoose.model<IUser>('User', userSchema)

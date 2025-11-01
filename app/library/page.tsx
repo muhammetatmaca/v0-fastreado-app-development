@@ -13,6 +13,7 @@ import { AIFeaturesDialog } from "@/components/ai-features-dialog"
 import { useAuth } from "@/contexts/auth-context"
 import { GOOGLE_DRIVE_PUBLIC_BOOKS } from "@/lib/google-drive"
 import { getUserDrivePdfs } from "@/lib/user-drive-upload"
+import { BookCover } from "@/components/book-cover"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +46,7 @@ interface PDF {
   description?: string // PDF açıklaması
   isPublicBook?: boolean // Genel kitap mı kullanıcı kitabı mı
   userId?: string // Hangi kullanıcının kitabı
+  language?: 'tr' | 'en' // Kitap dili (sadece public books için)
 }
 
 export default function LibraryPage() {
@@ -85,20 +87,47 @@ export default function LibraryPage() {
     }
   }, [user, isLoading, updateUser, router])
 
-  // Google Drive genel kitapları
-  const publicBooks: PDF[] = GOOGLE_DRIVE_PUBLIC_BOOKS
-
   const [pdfs, setPdfs] = useState<PDF[]>([])
+  const [publicBooks, setPublicBooks] = useState<PDF[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true)
+  const [languageFilter, setLanguageFilter] = useState<'all' | 'tr' | 'en'>('all')
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; pdfId: string; pdfTitle: string }>({
     open: false,
     pdfId: '',
     pdfTitle: ''
   })
 
+  // Load public books from API
+  useEffect(() => {
+    const fetchPublicBooks = async () => {
+      try {
+        setIsLoadingBooks(true)
+        const response = await fetch('/api/public-books')
+        const result = await response.json()
+        
+        if (result.success) {
+          setPublicBooks(result.books)
+        } else {
+          console.error('Failed to fetch public books:', result.error)
+          // Fallback to static books if API fails
+          setPublicBooks(GOOGLE_DRIVE_PUBLIC_BOOKS)
+        }
+      } catch (error) {
+        console.error('Public books fetch error:', error)
+        // Fallback to static books if API fails
+        setPublicBooks(GOOGLE_DRIVE_PUBLIC_BOOKS)
+      } finally {
+        setIsLoadingBooks(false)
+      }
+    }
+
+    fetchPublicBooks()
+  }, [])
+
   // Load PDFs from localStorage on component mount
   useEffect(() => {
-    if (user) {
+    if (user && !isLoadingBooks) {
       const savedPdfs = localStorage.getItem(`user_pdfs_${user.id}`)
       const userPdfs = savedPdfs ? JSON.parse(savedPdfs) : []
       
@@ -107,14 +136,14 @@ export default function LibraryPage() {
       const progressData = savedProgress ? JSON.parse(savedProgress) : {}
       
       // Merge Google Drive books with user uploads and apply saved progress
-      const allPdfs = [...driveBooks.map(book => ({
+      const allPdfs = [...publicBooks.map(book => ({
         ...book,
         progress: progressData[book.id] || book.progress
       })), ...userPdfs]
       
       setPdfs(allPdfs)
     }
-  }, [user])
+  }, [user, publicBooks, isLoadingBooks])
 
   // Save user PDFs to localStorage whenever pdfs change
   useEffect(() => {
@@ -131,12 +160,14 @@ export default function LibraryPage() {
     }
   }, [pdfs, user])
 
-  if (isLoading || !user) {
+  if (isLoading || !user || isLoadingBooks) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <img src="/fastreado-logo.png" alt="Fastreado" className="h-14 w-auto mx-auto mb-4 animate-pulse logo-img" />
-          <p className="text-muted-foreground">{t("common.loading")}</p>
+          <p className="text-muted-foreground">
+            {isLoadingBooks ? "Kitaplar yükleniyor..." : t("common.loading")}
+          </p>
         </div>
       </div>
     )
@@ -202,6 +233,17 @@ export default function LibraryPage() {
   const maxPdfs = user.plan === "premium" ? Number.POSITIVE_INFINITY : 2
   const userUploadedPdfs = pdfs.filter(pdf => pdf.isUserUploaded)
   const canUpload = userUploadedPdfs.length < maxPdfs
+
+  // Dil filtresine göre PDF'leri filtrele
+  const filteredPdfs = pdfs.filter(pdf => {
+    if (languageFilter === 'all') return true
+    if (pdf.isUserUploaded) return true // Kullanıcı PDF'leri her zaman göster
+    return pdf.language === languageFilter
+  })
+
+  // İstatistikler
+  const turkishBooksCount = publicBooks.filter(book => book.language === 'tr').length
+  const englishBooksCount = publicBooks.filter(book => book.language === 'en').length
 
   return (
     <div className="min-h-screen bg-background">
@@ -311,6 +353,37 @@ export default function LibraryPage() {
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{t("library.title")}</h1>
           <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">{t("library.subtitle")}</p>
 
+          {/* Dil Filtresi */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Dil:</span>
+            <div className="flex gap-2">
+              <Button
+                variant={languageFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLanguageFilter('all')}
+                className="text-xs"
+              >
+                Tümü ({publicBooks.length + userUploadedPdfs.length})
+              </Button>
+              <Button
+                variant={languageFilter === 'tr' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLanguageFilter('tr')}
+                className="text-xs"
+              >
+                🇹🇷 Türkçe ({turkishBooksCount + userUploadedPdfs.length})
+              </Button>
+              <Button
+                variant={languageFilter === 'en' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLanguageFilter('en')}
+                className="text-xs"
+              >
+                🇬🇧 English ({englishBooksCount})
+              </Button>
+            </div>
+          </div>
+
           <label htmlFor="pdf-upload">
             <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer p-4 md:p-8 text-center">
               <input
@@ -332,25 +405,29 @@ export default function LibraryPage() {
           </label>
         </div>
 
-        {pdfs.length > 0 ? (
+        {filteredPdfs.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-            {pdfs.map((pdf) => (
+            {filteredPdfs.map((pdf) => (
               <Card key={pdf.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
-                <div className="relative aspect-[2/3] bg-muted overflow-hidden">
-                  <img
-                    src={pdf.coverUrl || "/placeholder.svg"}
-                    alt={pdf.title}
-                    className="w-full h-full object-cover"
+                <div className="relative">
+                  <BookCover 
+                    title={pdf.title}
+                    language={pdf.language}
+                    isUserUploaded={pdf.isUserUploaded}
                   />
+                  
+                  {/* Progress bar */}
                   {pdf.progress > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
-                      <div className="h-full bg-primary transition-all" style={{ width: `${pdf.progress}%` }} />
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+                      <div className="h-full bg-white/80 transition-all" style={{ width: `${pdf.progress}%` }} />
                     </div>
                   )}
                 </div>
 
                 <div className="p-3 md:p-4">
-                  <h3 className="font-semibold mb-1 truncate text-sm md:text-base">{pdf.title}</h3>
+                  <h3 className="font-semibold mb-1 text-sm md:text-base line-clamp-2 leading-tight" title={pdf.title}>
+                    {pdf.title}
+                  </h3>
                   <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                     {pdf.pageCount} {t("library.pages")} • {pdf.progress > 0 ? `%${pdf.progress} ${t("library.completed")}` : t("library.not_started")}
                   </p>

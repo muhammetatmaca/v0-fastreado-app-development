@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { GOOGLE_DRIVE_PDFS, getGoogleDriveEmbedUrl } from "@/lib/google-drive"
+import { getGoogleDriveEmbedUrl } from "@/lib/google-drive"
 
 export default function RSVPReaderPage() {
   const params = useParams()
@@ -14,32 +14,66 @@ export default function RSVPReaderPage() {
   const [pdfData, setPdfData] = useState<string | null>(null)
   const [driveFileId, setDriveFileId] = useState<string | null>(null)
   const [isGoogleDrivePdf, setIsGoogleDrivePdf] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    // Önce Google Drive PDF'lerini kontrol et
-    const drivePdf = GOOGLE_DRIVE_PDFS.find(p => p.id === pdfId)
-    if (drivePdf) {
-      setPdfTitle(drivePdf.title)
-      setDriveFileId(drivePdf.driveFileId)
-      setIsGoogleDrivePdf(true)
-      return
-    }
-
-    // Sonra kullanıcının yüklediği PDF'leri kontrol et
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (user.id) {
-      const savedPdfs = localStorage.getItem(`user_pdfs_${user.id}`)
-      if (savedPdfs) {
-        const localPdfs = JSON.parse(savedPdfs)
-        const localPdf = localPdfs.find((p: any) => p.id === pdfId)
-        if (localPdf) {
-          setPdfTitle(localPdf.title)
-          setPdfData(localPdf.fileData)
-          setIsGoogleDrivePdf(false)
+    const findPdf = async () => {
+      setLoading(true)
+      
+      // Önce public books'ları API'den kontrol et
+      if (pdfId.startsWith('public_')) {
+        try {
+          const response = await fetch('/api/public-books')
+          const result = await response.json()
+          
+          if (result.success) {
+            const publicPdf = result.books.find((p: any) => p.id === pdfId)
+            if (publicPdf) {
+              setPdfTitle(publicPdf.title)
+              setDriveFileId(publicPdf.driveFileId)
+              setIsGoogleDrivePdf(true)
+              setLoading(false)
+              return
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch public books:', error)
         }
       }
+
+      // Sonra kullanıcının yüklediği PDF'leri kontrol et
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.id) {
+        const savedPdfs = localStorage.getItem(`user_pdfs_${user.id}`)
+        if (savedPdfs) {
+          const localPdfs = JSON.parse(savedPdfs)
+          const localPdf = localPdfs.find((p: any) => p.id === pdfId)
+          if (localPdf) {
+            setPdfTitle(localPdf.title)
+            setPdfData(localPdf.fileData)
+            setIsGoogleDrivePdf(false)
+            setLoading(false)
+            return
+          }
+        }
+      }
+      
+      setLoading(false)
     }
+
+    findPdf()
   }, [pdfId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">PDF yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!pdfData && !driveFileId) {
     return (

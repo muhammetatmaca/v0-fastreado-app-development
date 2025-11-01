@@ -3,7 +3,7 @@ export const GOOGLE_DRIVE_PUBLIC_BOOKS = [
   {
     id: "public_nutuk",
     title: "Nutuk - Mustafa Kemal Atatürk", 
-    driveFileId: "YOUR_NUTUK_FILE_ID", // Gerçek Google Drive file ID'nizi buraya yazın
+    driveFileId: "PLACEHOLDER_NUTUK_ID", // Public books klasörüne PDF yükledikten sonra gerçek ID'yi buraya yazın
     coverUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=600&fit=crop",
     pageCount: 542,
     uploadDate: "2024-01-15",

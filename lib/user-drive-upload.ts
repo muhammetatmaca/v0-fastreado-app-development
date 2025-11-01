@@ -1,6 +1,6 @@
 "use server"
 
-import { connectToDatabase } from "@/lib/mongodb"
+import { connectDB } from "@/lib/mongodb"
 import { User } from "@/models/User"
 
 // Kullanıcının Google Drive klasörünü oluştur
@@ -39,7 +39,7 @@ export async function uploadUserPdfToDrive(
   fileData: string
 ) {
   try {
-    await connectToDatabase()
+    await connectDB()
     
     // Gerçek Google Drive API entegrasyonu burada olacak
     // Şimdilik localStorage'da saklayacağız
@@ -87,7 +87,7 @@ export async function uploadUserPdfToDrive(
 // Kullanıcının Google Drive PDF'lerini getir
 export async function getUserDrivePdfs(userId: string) {
   try {
-    await connectToDatabase()
+    await connectDB()
     
     const user = await User.findById(userId)
     if (!user || !user.pdfs) {

@@ -21,6 +21,9 @@ dist/
 .env.test.local
 .env.production.local
 
+# Google Service Account
+google-service-account.json
+
 # Vercel
 .vercel
 

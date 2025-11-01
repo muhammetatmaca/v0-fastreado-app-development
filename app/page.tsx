@@ -53,6 +53,9 @@ export default function HomePage() {
                 <Button variant="ghost" asChild>
                   <Link href="/library">{t("nav.library")}</Link>
                 </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/my-pdfs">PDF'lerim</Link>
+                </Button>
                 <Button variant="ghost" onClick={logout}>
                   {t("auth.logout")}
                 </Button>
