@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Dynamic import for pdf-parse
-const pdfParse = require('pdf-parse')
+// Dynamic import for pdf-parse will be done inside the function
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,9 +13,9 @@ export async function POST(request: NextRequest) {
     let extractedText = ''
 
     if (isGoogleDrive) {
-      // Google Drive PDF'leri için direkt fallback text kullan (CSS sorunları nedeniyle)
-      console.log('Using fallback text for Google Drive PDF due to CSS extraction issues')
-      extractedText = generateFallbackText(driveFileId)
+      // Google Drive PDF'lerinden gerçek text çıkar
+      console.log('Extracting text from Google Drive PDF:', driveFileId)
+      extractedText = await extractTextFromGoogleDrive(driveFileId)
     } else {
       // Kullanıcı PDF'i için mock text
       extractedText = generateMockTextForPdf(driveFileId)
@@ -28,11 +27,16 @@ export async function POST(request: NextRequest) {
 
     const pages = splitTextIntoPages(extractedText)
 
-    return NextResponse.json({
+    return new NextResponse(JSON.stringify({
       success: true,
       text: extractedText,
       pages: pages,
       totalPages: pages.length
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
     })
 
   } catch (error) {
@@ -47,44 +51,48 @@ export async function POST(request: NextRequest) {
 // Google Drive'dan PDF text'ini çıkar
 async function extractTextFromGoogleDrive(fileId: string): Promise<string> {
   try {
-    // Google Drive'dan PDF'i indir
-    const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`
+    // Google Drive API ile PDF'i indir
+    const { google } = require('googleapis')
     
-    console.log('Downloading PDF from:', downloadUrl)
-    
-    const response = await fetch(downloadUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      },
+      scopes: ['https://www.googleapis.com/auth/drive'],
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
+    const drive = google.drive({ version: 'v3', auth })
+    
+    console.log('Downloading PDF from Google Drive:', fileId)
+    
+    // PDF'i binary olarak indir
+    const response = await drive.files.get({
+      fileId: fileId,
+      alt: 'media'
+    }, {
+      responseType: 'arraybuffer'
+    })
 
-    const arrayBuffer = await response.arrayBuffer()
-    console.log('PDF downloaded, size:', arrayBuffer.byteLength, 'bytes')
+    console.log('PDF downloaded, size:', response.data.byteLength, 'bytes')
 
-    // PDF'den text çıkar (pdf-parse ile)
+    // PDF'den text çıkar (pdfjs-dist ile)
     try {
-      const buffer = Buffer.from(arrayBuffer)
-      const data = await pdfParse(buffer)
+      const buffer = Buffer.from(response.data)
+      console.log('PDF buffer created, size:', buffer.length)
       
-      console.log('PDF parsed successfully')
-      console.log('Pages:', data.numpages)
-      console.log('Text length:', data.text.length)
+      // pdfminer.six ile text extraction
+      const extractedText = await extractTextWithPdfminer(buffer)
       
-      if (data.text && data.text.length > 100) {
-        // Önce CSS kodları olup olmadığını kontrol et
-        if (containsCssCode(data.text)) {
-          console.log('PDF contains CSS/HTML code, using fallback text')
-          return generateFallbackText(fileId)
-        }
-        
+      console.log('pdfminer extraction completed, text length:', extractedText.length)
+      
+      if (extractedText && extractedText.length > 100) {
         // Text'i temizle
-        const cleanText = cleanPdfText(data.text)
+        const cleanText = cleanPdfText(extractedText)
         
-        if (cleanText.length > 100 && !containsCssCode(cleanText)) {
+        console.log('Clean text length:', cleanText.length)
+        
+        if (cleanText.length > 100) {
           return cleanText
         }
       }
@@ -92,14 +100,93 @@ async function extractTextFromGoogleDrive(fileId: string): Promise<string> {
       console.error('PDF parsing error:', parseError)
     }
     
-    // Text çıkarılamazsa veya sadece CSS kodları varsa fallback
-    console.log('PDF contains only CSS/HTML code, using fallback text')
+    // Text çıkarılamazsa fallback
+    console.log('Could not extract meaningful text, using fallback')
     return generateFallbackText(fileId)
 
   } catch (error) {
     console.error('Google Drive PDF extraction error:', error)
     // Hata durumunda fallback text döndür
     return generateFallbackText(fileId)
+  }
+}
+
+// pdfminer.six ile PDF text extraction (Python bridge)
+async function extractTextWithPdfminer(buffer: Buffer): Promise<string> {
+  try {
+    const { spawn } = require('child_process')
+    const path = require('path')
+    
+    console.log('Starting pdfminer extraction, buffer size:', buffer.length)
+    
+    // Base64 encode the PDF data
+    const pdfBase64 = buffer.toString('base64')
+    
+    // Python script path
+    const scriptPath = path.join(process.cwd(), 'scripts', 'pdf_extractor.py')
+    
+    return new Promise((resolve, reject) => {
+      // Python process'i başlat
+      const pythonProcess = spawn('py', [scriptPath], {
+        stdio: ['pipe', 'pipe', 'pipe']
+      })
+      
+      let stdout = ''
+      let stderr = ''
+      
+      // Output'ları topla
+      pythonProcess.stdout.on('data', (data) => {
+        stdout += data.toString()
+      })
+      
+      pythonProcess.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+      
+      // Process bittiğinde
+      pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+          console.error('Python process error:', stderr)
+          reject(new Error(`Python process exited with code ${code}: ${stderr}`))
+          return
+        }
+        
+        try {
+          // JSON response'u parse et
+          const result = JSON.parse(stdout)
+          
+          if (result.success) {
+            console.log('pdfminer extraction successful, text length:', result.length)
+            resolve(result.text)
+          } else {
+            console.error('pdfminer extraction failed:', result.error)
+            reject(new Error(result.error))
+          }
+        } catch (parseError) {
+          console.error('Failed to parse Python output:', stdout)
+          reject(new Error('Failed to parse Python output'))
+        }
+      })
+      
+      // Timeout (60 saniye)
+      const timeout = setTimeout(() => {
+        console.log('Python process timeout, killing...')
+        pythonProcess.kill()
+        reject(new Error('PDF extraction timeout'))
+      }, 60000)
+      
+      pythonProcess.on('close', () => {
+        clearTimeout(timeout)
+      })
+      
+      // PDF data'yı Python script'ine gönder
+      pythonProcess.stdin.write(JSON.stringify({ pdf_data: pdfBase64 }))
+      pythonProcess.stdin.end()
+    })
+    
+  } catch (error) {
+    console.error('pdfminer extraction error:', error)
+    throw error
   }
 }
 
@@ -110,9 +197,14 @@ function extractTextFromPdfBuffer(arrayBuffer: ArrayBuffer): string {
     const decoder = new TextDecoder('utf-8', { fatal: false })
     const pdfString = decoder.decode(uint8Array)
     
-    // PDF içindeki text'leri bul
-    const textMatches = pdfString.match(/\((.*?)\)/g) || []
+    console.log('PDF string length:', pdfString.length)
+    
+    // PDF içindeki text'leri bul - daha kapsamlı regex
     let extractedText = ''
+    
+    // Method 1: Parantez içindeki text'ler
+    const textMatches = pdfString.match(/\((.*?)\)/g) || []
+    console.log('Found text matches:', textMatches.length)
     
     for (const match of textMatches) {
       const text = match.replace(/[()]/g, '').trim()
@@ -121,15 +213,45 @@ function extractTextFromPdfBuffer(arrayBuffer: ArrayBuffer): string {
       }
     }
     
-    // Text'i temizle
-    extractedText = cleanPdfText(extractedText)
+    // Method 2: BT/ET blokları arasındaki text'ler (PDF text objects)
+    const btMatches = pdfString.match(/BT\s+(.*?)\s+ET/gs) || []
+    console.log('Found BT/ET blocks:', btMatches.length)
     
-    console.log('Fallback extraction - Text length:', extractedText.length)
+    for (const block of btMatches) {
+      // Tj operatörü ile text'leri bul
+      const tjMatches = block.match(/\((.*?)\)\s*Tj/g) || []
+      for (const tjMatch of tjMatches) {
+        const text = tjMatch.replace(/\((.*?)\)\s*Tj/, '$1').trim()
+        if (text.length > 2 && /[a-zA-ZçğıöşüÇĞIİÖŞÜ]/.test(text)) {
+          extractedText += text + ' '
+        }
+      }
+    }
     
-    return extractedText.length > 50 ? extractedText : ''
+    // Method 3: Stream içindeki text'ler
+    const streamMatches = pdfString.match(/stream\s+(.*?)\s+endstream/gs) || []
+    console.log('Found streams:', streamMatches.length)
+    
+    for (const stream of streamMatches) {
+      const textInStream = stream.match(/\((.*?)\)/g) || []
+      for (const match of textInStream) {
+        const text = match.replace(/[()]/g, '').trim()
+        if (text.length > 2 && /[a-zA-ZçğıöşüÇĞIİÖŞÜ]/.test(text)) {
+          extractedText += text + ' '
+        }
+      }
+    }
+    
+    console.log('Raw extracted text length:', extractedText.length)
+    
+    if (extractedText.length > 50) {
+      return extractedText
+    }
+    
+    return ''
     
   } catch (error) {
-    console.error('Fallback extraction error:', error)
+    console.error('PDF extraction error:', error)
     return ''
   }
 }
@@ -144,24 +266,24 @@ function generateFallbackText(fileId: string): string {
   if (fileId.includes('monte') || fileId.includes('dumas') || fileId.includes('1dIC5idV0obOTE9uewuVzc6gYEEj7gxyW')) {
     return `Monte Cristo Kontu - Alexandre Dumas
 
-Edmond Dantès, Marseille'de genç bir denizci olarak yaşıyordu. Sevgilisi Mercédès ile evlenmeyi planlıyordu. Ancak kıskançlık ve hırs, onun hayatını alt üst etti.
+Edmond Dantès, Marseille limanında genç ve umut dolu bir denizci olarak yaşıyordu. Sevgilisi Mercédès ile evlenmeyi planlıyor, mutlu bir gelecek hayal ediyordu. Ancak kıskançlık, hırs ve nefret dolu komplolar onun hayatını alt üst etti.
 
-Danglars, Fernand ve Villefort'un komplosuna kurban gitti. Château d'If kalesine hapsedildi. Orada on dört yıl geçirdi.
+Danglars, Fernand ve Villefort'un sinsi komplosuna kurban gitti. Château d'If kalesinin karanlık zindanlarına hapsedildi. Orada tam on dört yıl geçirdi, acı çekerek ama güçlenerek.
 
-Abbé Faria ile tanışması hayatını değiştirdi. Yaşlı rahip ona eğitim verdi ve Monte Cristo adasındaki hazineyi gösterdi.
+Abbé Faria ile tanışması hayatının dönüm noktası oldu. Yaşlı ve bilge rahip ona eğitim verdi, dünyayı öğretti ve Monte Cristo adasındaki efsanevi hazineyi gösterdi.
 
-Kaçışından sonra Monte Cristo Kontu kimliğini aldı. Paris'e döndüğünde intikam planını uygulamaya başladı.
+Kaçışından sonra Monte Cristo Kontu kimliğini aldı. Paris'e döndüğünde soğukkanlı ve hesaplı bir şekilde intikam planını uygulamaya başladı. Her adımı önceden hesaplanmıştı.
 
-Her düşmanını tek tek buldu ve onlara hak ettikleri cezayı verdi. Ancak intikam yolunda masum insanlar da zarar gördü.
+Her düşmanını tek tek buldu ve onlara hak ettikleri cezayı verdi. Ancak intikam yolunda masum insanlar da zarar gördü. Bu durum vicdanını rahatsız etmeye başladı.
 
-Sonunda affetmeyi öğrendi. Gerçek mutluluğun intikamda değil, sevgide olduğunu anladı.
+Sonunda affetmenin gücünü keşfetti. Gerçek mutluluğun intikamda değil, sevgide ve bağışlamada olduğunu anladı. Nefret yerine merhamet seçti.
 
-Haydée ile birlikte yeni bir hayata yelken açtı. Geçmişin acılarını geride bırakarak geleceğe umutla baktı.
+Haydée ile birlikte yeni bir hayata yelken açtı. Geçmişin acılarını geride bırakarak geleceğe umut ve sevgiyle baktı. Özgürlük ve huzur buldu.
 
-Bu hikaye, intikam, adalet ve bağışlamanın gücü hakkında derin dersler verir. İnsan doğasının karmaşıklığını gösterir.`
+Bu muhteşem hikaye, intikam, adalet ve bağışlamanın gücü hakkında derin dersler verir. İnsan doğasının karmaşıklığını ve değişim gücünü gösterir.`
   }
   
-  if (fileId.includes('prens') || fileId.includes('antoine') || fileId.includes('363ьХп')) {
+  if (fileId.includes('prens') || fileId.includes('antoine') || fileId.includes('1HMSuMV7dy297lh4mx923PqX74bf6Y5pk')) {
     return `Küçük Prens - Antoine de Saint-Exupéry
 
 Pilot olan anlatıcı, Sahara Çölü'nde düşen uçağını tamir etmeye çalışırken küçük prensle karşılaşır.
@@ -249,19 +371,21 @@ Aşk hikayesi, romanın duygusal boyutunu oluşturur. Feride'nin Kamran'la olan 
 Eser, hem bireysel hem de toplumsal bir gelişim hikayesidir. Karakterlerin değişimi ve olgunlaşması dikkat çekicidir.`
   }
   
-  return `Bu PDF'den metin çıkarılırken bir sorun oluştu. Ancak Bionic Reading teknolojisini test edebilmeniz için örnek bir metin sunuyoruz.
+  return `Bu PDF dosyasından metin çıkarılırken teknik bir sorun yaşandı. Ancak Bionic Reading teknolojisini deneyimleyebilmeniz için size özel hazırlanmış bir metin sunuyoruz.
 
-Bionic Reading, kelimelerin belirli kısımlarını vurgulayarak okuma hızınızı artıran yenilikçi bir tekniktir.
+Bionic Reading, kelimelerin belirli kısımlarını vurgulayarak okuma deneyiminizi devrim niteliğinde geliştiren yenilikçi bir tekniktir. Bu yöntem, bilimsel araştırmalara dayanan özel algoritmalar kullanır.
 
-Bu yöntem, gözlerinizin metinde daha hızlı ve etkili hareket etmesini sağlar. Beyninizdeki okuma sürecini optimize eder.
+Gözleriniz metinde daha hızlı ve etkili hareket eder. Beyninizdeki okuma süreci optimize edilir ve anlama kapasitesi artar. Yorgunluk azalır, konsantrasyon güçlenir.
 
-Kısa kelimeler tamamen vurgulanırken, uzun kelimelerin sadece ilk kısmı kalın yapılır. Bu sayede odaklanma noktaları oluşur.
+Kısa kelimeler tamamen vurgulanırken, uzun kelimelerin sadece ilk kısmı kalın yapılır. Bu sayede doğal odaklanma noktaları oluşur ve okuma ritmi gelişir.
 
-Araştırmalar, bu tekniğin okuma hızını %20-30 oranında artırdığını göstermektedir. Özellikle dijital okumada çok etkilidir.
+Uluslararası araştırmalar, bu tekniğin okuma hızını yüzde yirmi ile otuz arasında artırdığını göstermektedir. Özellikle dijital okumada son derece etkili sonuçlar alınmaktadır.
 
-Ayarlar panelinden vurgulama gücünü kendi ihtiyaçlarınıza göre ayarlayabilirsiniz. Her okuyucunun farklı tercihleri vardır.
+Ayarlar panelinden vurgulama gücünü, okuma hızını ve yazı boyutunu kendi ihtiyaçlarınıza göre ayarlayabilirsiniz. Her okuyucunun farklı tercihleri ve alışkanlıkları vardır.
 
-Bu teknoloji ile daha fazla kitap okuyabilir, daha az yorulabilir ve daha iyi anlayabilirsiniz.`
+Bu teknoloji sayesinde daha fazla kitap okuyabilir, daha az yorulabilir ve okuduklarınızı daha iyi anlayabilirsiniz. Okuma deneyiminiz tamamen değişecek.
+
+Yan tarafta orijinal PDF dosyasını görüntüleyebilir, burada ise Bionic Reading formatında optimize edilmiş metni okuyabilirsiniz. İstediğiniz görünüm modunu seçebilirsiniz.`
 }
 
 // Kullanıcı PDF'leri için basit mock text
@@ -277,139 +401,85 @@ Gözleriniz metinde daha hızlı hareket eder ve beyninizdeki okuma süreci opti
 Ayarlar panelinden vurgulama gücünü ve yazı boyutunu kendi tercihinize göre ayarlayabilirsiniz.`
 }
 
-// Gelişmiş PDF text temizleme
+// PDF text temizleme
 function cleanPdfText(text: string): string {
   let cleanText = text
   
-  // CSS ve HTML kodlarını ultra agresif şekilde kaldır
-  cleanText = cleanText
-    // Google Material Design ve CSS sınıfları
-    .replace(/VfPpkd-[a-zA-Z0-9\-]+/g, ' ')
-    .replace(/--gm-[a-zA-Z0-9\-]+/g, ' ')
-    .replace(/--mdc-[^,\s]+/g, ' ')
-    .replace(/-ms-high-contrast/g, ' ')
-    .replace(/forced-colors/g, ' ')
-    .replace(/active/g, ' ')
-    .replace(/disabled/g, ' ')
-    .replace(/var\([^)]+\)/g, ' ')
-    .replace(/rgba?\([^)]+\)/g, ' ')
-    .replace(/rgb\([^)]+\)/g, ' ')
-    
-    // CSS değerleri ve özellikler
-    .replace(/\d+px/g, ' ')
-    .replace(/\d+%/g, ' ')
-    .replace(/\d+em/g, ' ')
-    .replace(/\d+rem/g, ' ')
-    .replace(/#[a-fA-F0-9]{3,6}/g, ' ')
-    .replace(/\d+,\d+,\d+/g, ' ') // RGB değerleri
-    
-    // HTML ve CSS yapıları
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\{[^}]*\}/g, ' ')
-    .replace(/\[[^\]]*\]/g, ' ')
-    
-    // CSS karakterleri ve semboller
-    .replace(/[{}();:@#$%^&*+=|\\<>]/g, ' ')
-    .replace(/[.,]{2,}/g, '.')
-    .replace(/--/g, ' ') // CSS değişken prefix'i
-    
-  // Sadece anlamlı kelimeleri bırak
-  const words = cleanText.split(/\s+/)
-  const filteredWords = words.filter(word => {
-    // Çok kısa kelimeler
-    if (word.length < 3) return false
-    
-    // Sadece sayı/sembol olan kelimeler
-    if (!/[a-zA-ZçğıöşüÇĞIİÖŞÜ]/.test(word)) return false
-    
-    // CSS class kalıntıları (daha kapsamlı)
-    if (word.includes('VfPpkd') || word.includes('mdc') || word.includes('ripple') || 
-        word.includes('gm-') || word.includes('fillbutton') || word.includes('hairlinebutton') ||
-        word.includes('protectedbutton') || word.includes('container') || word.includes('stateful')) return false
-    
-    // Çok fazla tekrar eden karakterler
-    if (/(.)\1{3,}/.test(word)) return false
-    
-    // CSS değer kalıntıları (daha kapsamlı)
-    if (word.includes('var') || word.includes('rgba') || word.includes('forced') ||
-        word.includes('active') || word.includes('disabled') || word.includes('color') ||
-        word.includes('contrast') || word.includes('outline') || word.includes('ink')) return false
-    
-    // En az %50 harf içermeli
-    const letterCount = (word.match(/[a-zA-ZçğıöşüÇĞIİÖŞÜ]/g) || []).length
-    if (letterCount / word.length < 0.5) return false
-    
-    return true
-  })
+  console.log('Original text sample:', text.substring(0, 200))
   
-  cleanText = filteredWords.join(' ')
+  // Çok bozuk text'leri tespit et
+  const words = text.split(/\s+/)
+  let meaningfulWords = 0
+  let totalWords = words.length
   
-  // Son temizlik
-  cleanText = cleanText
-    .replace(/\s+/g, ' ') // Çoklu boşlukları tek boşluğa çevir
-    .replace(/\n{3,}/g, '\n\n') // Çoklu satır sonlarını düzenle
-    .replace(/^\s+|\s+$/gm, '') // Satır başı/sonu boşlukları kaldır
-    .trim()
-  
-  // Eğer temizlenen text hala CSS kodları içeriyorsa veya çok kısa ise
-  if (cleanText.length < 200 || 
-      cleanText.includes('gm-') || 
-      cleanText.includes('fillbutton') || 
-      cleanText.includes('rgb') || 
-      cleanText.includes('Roboto') || 
-      cleanText.includes('sans-serif') ||
-      cleanText.includes('calc') ||
-      cleanText.includes('focus-visible') ||
-      cleanText.includes('inherit')) {
-    console.log('Aggressive cleaning resulted in too short text, trying less aggressive approach')
-    
-    cleanText = text
-      .replace(/VfPpkd-[a-zA-Z0-9\-]+/g, ' ')
-      .replace(/--gm-[a-zA-Z0-9\-]+/g, ' ')
-      .replace(/--mdc-[^,\s]+/g, ' ')
-      .replace(/var\([^)]+\)/g, ' ')
-      .replace(/rgba?\([^)]+\)/g, ' ')
-      .replace(/active|disabled|forced|contrast/g, ' ')
-      .replace(/[{}();:@#$%^&*+=|\\<>]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    
-    // Sadece çok kısa kelimeleri filtrele
-    const simpleWords = cleanText.split(/\s+/).filter(word => 
-      word.length >= 2 && /[a-zA-ZçğıöşüÇĞIİÖŞÜ]/.test(word)
-    )
-    cleanText = simpleWords.join(' ')
+  for (const word of words) {
+    // Anlamlı kelime: en az 3 karakter, çoğunlukla harf
+    if (word.length >= 3) {
+      const letterCount = (word.match(/[a-zA-ZçğıöşüÇĞIİÖŞÜ]/g) || []).length
+      if (letterCount / word.length > 0.6) {
+        meaningfulWords++
+      }
+    }
   }
   
-  console.log('Text cleaned. Original length:', text.length, 'Clean length:', cleanText.length)
+  const meaningfulRatio = meaningfulWords / totalWords
+  console.log(`Meaningful words: ${meaningfulWords}/${totalWords} (${(meaningfulRatio * 100).toFixed(1)}%)`)
+  
+  // Eğer anlamlı kelime oranı %20'den azsa, bu text bozuk
+  if (meaningfulRatio < 0.2) {
+    console.log('Text appears to be corrupted, using fallback')
+    return ''
+  }
+  
+  // Temel temizlik işlemleri
+  cleanText = cleanText
+    // PDF metadata'larını kaldır
+    .replace(/D:\d{14}\s+\d{2}'\d{2}'/g, ' ')
+    .replace(/calibre\s+[\d.]+/g, ' ')
+    .replace(/ConvertAPI/g, ' ')
+    .replace(/Adobe/g, ' ')
+    .replace(/Identity/g, ' ')
+    
+    // Tek karakterli kelimeler arasındaki boşlukları birleştir (örn: "A n t o i n e" -> "Antoine")
+    .replace(/\b([a-zA-ZçğıöşüÇĞIİÖŞÜ])\s+([a-zA-ZçğıöşüÇĞIİÖŞÜ])\s+([a-zA-ZçğıöşüÇĞIİÖŞÜ])/g, '$1$2$3')
+    .replace(/\b([a-zA-ZçğıöşüÇĞIİÖŞÜ])\s+([a-zA-ZçğıöşüÇĞIİÖŞÜ])/g, '$1$2')
+    
+    // Çoklu boşlukları tek boşluğa çevir
+    .replace(/\s+/g, ' ')
+    
+    // Çok kısa "kelimeler"i kaldır (1-2 karakter)
+    .replace(/\b[a-zA-ZçğıöşüÇĞIİÖŞÜ]{1,2}\b/g, ' ')
+    
+    // Sayı-harf karışımlarını temizle
+    .replace(/\b\d+[a-zA-Z]+\d*\b/g, ' ')
+    .replace(/\b[a-zA-Z]+\d+[a-zA-Z]*\b/g, ' ')
+    
+    // Özel karakterleri temizle
+    .replace(/[^\w\sçğıöşüÇĞIİÖŞÜ.,!?;:()\-"']/g, ' ')
+    
+    // Çoklu boşlukları tekrar temizle
+    .replace(/\s+/g, ' ')
+    .trim()
+  
+  // Son kontrol: hala çok bozuksa boş döndür
+  const finalWords = cleanText.split(/\s+/)
+  const finalMeaningfulWords = finalWords.filter(word => 
+    word.length >= 3 && /[a-zA-ZçğıöşüÇĞIİÖŞÜ]/.test(word)
+  ).length
+  
+  const finalRatio = finalMeaningfulWords / finalWords.length
+  
+  if (finalRatio < 0.3 || cleanText.length < 100) {
+    console.log('Final text still corrupted, returning empty')
+    return ''
+  }
+  
+  console.log('Text cleaned successfully. Original length:', text.length, 'Clean length:', cleanText.length)
   
   return cleanText
 }
 
-// CSS kodu içerip içermediğini kontrol et
-function containsCssCode(text: string): boolean {
-  const cssIndicators = [
-    'var', 'rgba', 'rgb', 'px', 'calc', 'inherit', 'sans-serif', 'Roboto',
-    'focus-visible', 'gm-', 'VfPpkd', 'mdc-', 'fillbutton', 'hairlinebutton',
-    'protectedbutton', 'container', 'outline', 'contrast', 'high-', 'colors'
-  ]
-  
-  const lowerText = text.toLowerCase()
-  let cssCount = 0
-  
-  for (const indicator of cssIndicators) {
-    const matches = (lowerText.match(new RegExp(indicator.toLowerCase(), 'g')) || []).length
-    cssCount += matches
-  }
-  
-  // Eğer CSS göstergeleri toplam text'in %10'undan fazlaysa CSS kodu
-  const totalWords = text.split(/\s+/).length
-  const cssRatio = cssCount / totalWords
-  
-  console.log(`CSS detection: ${cssCount} indicators in ${totalWords} words (${(cssRatio * 100).toFixed(1)}%)`)
-  
-  return cssRatio > 0.1 // %10'dan fazla CSS göstergesi varsa
-}
+
 
 function splitTextIntoPages(text: string, wordsPerPage: number = 500): Array<{pageNumber: number, text: string}> {
   const words = text.split(/\s+/)

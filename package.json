@@ -57,6 +57,7 @@
     "next-themes": "latest",
     "nodemailer": "^7.0.9",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.394",
     "react": "^19",
     "react-day-picker": "9.8.0",
     "react-dom": "^19",
